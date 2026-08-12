@@ -6,9 +6,7 @@ Converts calisthenics work to screen time
 
 
 ## Stuff to change/improve the app
-1. Have AI detect ground for push-ups/sit-ups so fewer free rewards
-2. Have AI detect pull-up bar for pull-ups so fewer free rewards
-3. Stop rounding down refunded time and add seconds
-4. Clean up layout so less scrolling needed
-5. Only ever award push-up after AI detects full down and up sequence; overall refine AI detection
-6. Add local storage so all data isn't lost on page refresh
+
+1. Clean up layout so no scrolling needed (move the timer functionalities to the left of the rep counter, size down the rep counter, move everything else to the right of the rep counter)
+2. Add local storage so data isn't lost with one refresh
+3. Improve AI detection to require a full up-and-down sequence for pull-ups to avoid duplicate counts
