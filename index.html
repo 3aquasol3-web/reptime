@@ -43,7 +43,7 @@ body{
   line-height:1.5;
   -webkit-font-smoothing:antialiased;
   min-height:100vh;
-  padding-bottom:64px;
+  padding-bottom:32px;
 }
 .wrap{max-width:640px;margin:0 auto;padding:20px 18px 0;}
 a{color:var(--amber);}
@@ -51,7 +51,7 @@ button{font-family:inherit;}
 :focus-visible{outline:2px solid var(--amber);outline-offset:2px;border-radius:6px;}
 
 /* ---------- Header ---------- */
-header.top{display:flex;align-items:baseline;justify-content:space-between;padding:6px 2px 18px;}
+header.top{display:flex;align-items:baseline;justify-content:space-between;padding:4px 2px 12px;}
 .brand{font-family:var(--font-display);font-size:34px;letter-spacing:1.5px;color:var(--text);display:flex;align-items:center;gap:8px;}
 .brand .dot{width:10px;height:10px;border-radius:50%;background:var(--green);box-shadow:0 0 12px var(--green);}
 .tagline{font-size:12.5px;color:var(--text-dim);margin-top:2px;}
@@ -61,8 +61,8 @@ header.top{display:flex;align-items:baseline;justify-content:space-between;paddi
   background:linear-gradient(180deg,var(--bg-elev) 0%, var(--bg-elev2) 100%);
   border:1px solid var(--border);
   border-radius:var(--radius);
-  padding:18px;
-  margin-bottom:16px;
+  padding:14px;
+  margin-bottom:11px;
 }
 .card h2{
   font-family:var(--font-mono);
@@ -70,7 +70,7 @@ header.top{display:flex;align-items:baseline;justify-content:space-between;paddi
   letter-spacing:2px;
   text-transform:uppercase;
   color:var(--text-faint);
-  margin:0 0 14px;
+  margin:0 0 10px;
   font-weight:600;
 }
 
@@ -78,7 +78,7 @@ header.top{display:flex;align-items:baseline;justify-content:space-between;paddi
 .camera-frame{
   position:relative;
   width:100%;
-  aspect-ratio:4/3;
+  aspect-ratio:3/2;
   background:#05070c;
   border-radius:var(--radius-sm);
   overflow:hidden;
@@ -94,7 +94,7 @@ header.top{display:flex;align-items:baseline;justify-content:space-between;paddi
   flex-direction:column;gap:10px;text-align:center;padding:20px;
 }
 .camera-frame .placeholder svg{opacity:.5;}
-.status-row{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:13px;color:var(--text-dim);min-height:18px;}
+.status-row{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px;color:var(--text-dim);min-height:18px;}
 .status-dot{width:7px;height:7px;border-radius:50%;background:var(--text-faint);flex:none;}
 .status-row.ok .status-dot{background:var(--green);box-shadow:0 0 8px var(--green);}
 .status-row.error{color:var(--coral);}
@@ -113,22 +113,22 @@ header.top{display:flex;align-items:baseline;justify-content:space-between;paddi
 .btn-ghost{background:var(--bg-elev2);color:var(--text);border:1px solid var(--border);}
 .btn-danger{background:transparent;color:var(--coral);border:1px solid #4a2323;}
 .btn-block{width:100%;}
-.btn-row{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;}
+.btn-row{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;}
 
 /* ---------- Exercise tabs ---------- */
-.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:16px 0 4px;}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0 4px;}
 .tab{
   background:var(--bg-elev2);border:1px solid var(--border);color:var(--text-dim);
-  border-radius:var(--radius-sm);padding:10px 6px;font-weight:600;font-size:13px;
+  border-radius:var(--radius-sm);padding:8px 6px;font-weight:600;font-size:13px;
   cursor:pointer;text-align:center;
 }
 .tab.active{background:rgba(255,193,69,.12);border-color:var(--amber);color:var(--amber);}
 
 /* ---------- Rep counter ---------- */
-.rep-block{text-align:center;padding:18px 0 4px;}
+.rep-block{text-align:center;padding:8px 0 2px;}
 .rep-number{
   font-family:var(--font-display);
-  font-size:clamp(72px,22vw,110px);
+  font-size:clamp(52px,15vw,80px);
   line-height:.9;
   color:var(--text);
   transition:transform .15s ease, color .15s ease;
@@ -313,7 +313,7 @@ footer strong{color:var(--text-dim);}
     <div class="bank-total"><span id="bankTotal">0m</span> <small>banked</small></div>
     <div class="bank-breakdown" id="bankBreakdown"></div>
 
-    <div style="height:16px"></div>
+    <div style="height:8px"></div>
     <h2>Spend It</h2>
     <div class="session-input-row">
       <input type="number" min="0" step="0.5" id="sessionInput" placeholder="Minutes">
@@ -436,22 +436,36 @@ function angleDeg(a, b, c) {
 }
 function clamp(v, lo, hi) { return Math.min(hi, Math.max(lo, v)); }
 
-function createRepCounter({ getMetric, enterThreshold, exitThreshold, direction, minRepIntervalMs }) {
+function createRepCounter({ getMetric, enterThreshold, exitThreshold, direction, minRepIntervalMs, minContractedMs = 0, getGate }) {
   let state = 'rest';
   let lastRepTime = -Infinity;
+  let contractedSince = null;
   let lastMetric = null;
+  let lastGateOk = true;
   return {
     update(landmarks, tMs) {
       const m = getMetric(landmarks);
       lastMetric = m;
       if (m == null) return false;
+      const gateOk = getGate ? getGate(landmarks, tMs) : true;
+      lastGateOk = (gateOk !== false); // null/undefined = can't tell = don't punish for it
       const contracted = direction === 'below' ? m < enterThreshold : m > enterThreshold;
       const released = direction === 'below' ? m > exitThreshold : m < exitThreshold;
       if (state === 'rest' && contracted) {
+        // Only allow the rep attempt to begin if we're confidently in a plausible starting
+        // position (plank / lying flat / hanging from something fixed). This is the actual
+        // "ground"/"bar" check — a geometry proxy, not object recognition, but it's what
+        // genuinely stops someone racking up reps from the wrong position.
+        if (lastGateOk === false) return false;
         state = 'contracted';
+        contractedSince = tMs;
       } else if (state === 'contracted' && released) {
+        // Require a real dwell at the bottom/top, not just an instantaneous threshold
+        // crossing from jitter — this is the "full down and up sequence" requirement.
+        const heldLongEnough = contractedSince != null && (tMs - contractedSince) >= minContractedMs;
         state = 'rest';
-        if (tMs - lastRepTime >= minRepIntervalMs) {
+        contractedSince = null;
+        if (heldLongEnough && tMs - lastRepTime >= minRepIntervalMs) {
           lastRepTime = tMs;
           return true;
         }
@@ -459,7 +473,8 @@ function createRepCounter({ getMetric, enterThreshold, exitThreshold, direction,
       return false;
     },
     get lastMetric() { return lastMetric; },
-    reset() { state = 'rest'; lastRepTime = -Infinity; }
+    get lastGateOk() { return lastGateOk; },
+    reset() { state = 'rest'; lastRepTime = -Infinity; contractedSince = null; }
   };
 }
 
@@ -494,22 +509,83 @@ function pullupMetric(lm){
   return clamp(1 - diff, 0, 1); // higher = chin closer to hands
 }
 
+/* ============================== Position gates ("ground" / "bar" proxies) ==============================
+   The pose model tracks joints, not scene objects — it has no idea what a floor or a pull-up
+   bar looks like. These gates approximate the same anti-cheat goal from joint geometry alone:
+   push-ups/sit-ups require a body that's actually roughly horizontal at rest (on the ground),
+   pull-ups require hands that stay essentially fixed in space and overhead (gripping something
+   fixed) rather than freely waving around. Returning null means "can't tell" — gates never
+   punish a rep for landmarks we simply couldn't see; they only block when confidently violated. */
+function midOf(a,b){
+  if(vis(a)&&vis(b)) return {x:(a.x+b.x)/2, y:(a.y+b.y)/2};
+  if(vis(a)) return a;
+  if(vis(b)) return b;
+  return null;
+}
+function tiltFromHorizontalDeg(p1,p2){
+  if(!p1||!p2) return null;
+  const dx=p2.x-p1.x, dy=p2.y-p1.y;
+  if(dx===0 && dy===0) return null;
+  let deg = Math.abs(Math.atan2(dy,dx)*180/Math.PI);
+  if(deg>90) deg = 180-deg;
+  return deg; // 0deg = horizontal (flat on the ground), 90deg = vertical (standing)
+}
+function bodyTiltGate(lm, maxTiltDeg){
+  const sh = midOf(lm[IDX.lsh], lm[IDX.rsh]);
+  const hip = midOf(lm[IDX.lhip], lm[IDX.rhip]);
+  const tilt = tiltFromHorizontalDeg(sh, hip);
+  if(tilt==null) return null;
+  return tilt <= maxTiltDeg;
+}
+let wristHistory = [];
+const WRIST_HISTORY_MS = 1200;
+function resetPullupGate(){ wristHistory = []; }
+function pullupGate(lm, tMs, wristStabilityMax, overheadMargin){
+  const wrist = midOf(lm[IDX.lwr], lm[IDX.rwr]);
+  if(!wrist) return null;
+  wristHistory.push({x:wrist.x, y:wrist.y, t:tMs});
+  while(wristHistory.length && tMs - wristHistory[0].t > WRIST_HISTORY_MS) wristHistory.shift();
+  if(wristHistory.length < 5) return null; // still building a baseline — don't block yet
+  let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
+  for(const p of wristHistory){ if(p.x<minX)minX=p.x; if(p.x>maxX)maxX=p.x; if(p.y<minY)minY=p.y; if(p.y>maxY)maxY=p.y; }
+  const spread = Math.max(maxX-minX, maxY-minY);
+  const stable = spread <= wristStabilityMax;
+  const sh = midOf(lm[IDX.lsh], lm[IDX.rsh]);
+  const overhead = sh ? (wrist.y < sh.y - overheadMargin) : true;
+  return stable && overhead;
+}
+
 /* ============================== Config ============================== */
 const SENSITIVITY_PRESETS = {
-  pullup: { loose:{enter:0.45,exit:0.30,minRepIntervalMs:500}, normal:{enter:0.60,exit:0.25,minRepIntervalMs:700}, strict:{enter:0.75,exit:0.20,minRepIntervalMs:800} },
-  pushup: { loose:{enter:115,exit:140,minRepIntervalMs:400},   normal:{enter:100,exit:150,minRepIntervalMs:500},   strict:{enter:85,exit:160,minRepIntervalMs:600} },
-  situp:  { loose:{enter:105,exit:130,minRepIntervalMs:500},   normal:{enter:90,exit:140,minRepIntervalMs:600},    strict:{enter:75,exit:150,minRepIntervalMs:700} },
+  pullup: { loose:{enter:0.45,exit:0.30,minRepIntervalMs:500,minContractedMs:100,wristStabilityMax:0.09,overheadMargin:0.00}, normal:{enter:0.62,exit:0.24,minRepIntervalMs:650,minContractedMs:150,wristStabilityMax:0.06,overheadMargin:0.01}, strict:{enter:0.78,exit:0.18,minRepIntervalMs:800,minContractedMs:220,wristStabilityMax:0.04,overheadMargin:0.02} },
+  pushup: { loose:{enter:110,exit:145,minRepIntervalMs:400,minContractedMs:100,maxTiltDeg:55}, normal:{enter:95,exit:155,minRepIntervalMs:500,minContractedMs:150,maxTiltDeg:45}, strict:{enter:80,exit:165,minRepIntervalMs:600,minContractedMs:220,maxTiltDeg:35} },
+  situp:  { loose:{enter:100,exit:135,minRepIntervalMs:500,minContractedMs:100,maxTiltDeg:45}, normal:{enter:85,exit:145,minRepIntervalMs:600,minContractedMs:150,maxTiltDeg:35}, strict:{enter:70,exit:155,minRepIntervalMs:700,minContractedMs:220,maxTiltDeg:28} },
 };
 const EXERCISES = {
   pullup: { label:'Pull-Up', minutesPerRep:5,   sensitivity:'normal', direction:'above', metric:pullupMetric },
   pushup: { label:'Push-Up', minutesPerRep:1,   sensitivity:'normal', direction:'below', metric:pushupMetric },
   situp:  { label:'Sit-Up',  minutesPerRep:0.5, sensitivity:'normal', direction:'below', metric:situpMetric  },
 };
+const POSITION_HINTS = {
+  pullup: 'Grip a fixed bar with both hands and hang fully — hands stay put, body does the moving',
+  pushup: 'Get into plank position — hands under shoulders, body flat',
+  situp:  'Lie flat on your back between reps',
+};
+function makeGate(key, preset){
+  if(key==='pushup') return (lm)=> bodyTiltGate(lm, preset.maxTiltDeg);
+  if(key==='situp')  return (lm)=> bodyTiltGate(lm, preset.maxTiltDeg);
+  if(key==='pullup') return (lm, tMs)=> pullupGate(lm, tMs, preset.wristStabilityMax, preset.overheadMargin);
+  return null;
+}
 let counters = {};
 function rebuildCounter(key){
   const ex = EXERCISES[key];
   const preset = SENSITIVITY_PRESETS[key][ex.sensitivity];
-  counters[key] = createRepCounter({ getMetric: ex.metric, enterThreshold: preset.enter, exitThreshold: preset.exit, direction: ex.direction, minRepIntervalMs: preset.minRepIntervalMs });
+  counters[key] = createRepCounter({
+    getMetric: ex.metric, enterThreshold: preset.enter, exitThreshold: preset.exit,
+    direction: ex.direction, minRepIntervalMs: preset.minRepIntervalMs,
+    minContractedMs: preset.minContractedMs, getGate: makeGate(key, preset)
+  });
 }
 Object.keys(EXERCISES).forEach(rebuildCounter);
 
@@ -538,8 +614,10 @@ const cameraSelect = $('cameraSelect');
 /* ============================== Formatting ============================== */
 function formatBank(totalSeconds){
   const s = Math.max(0, Math.round(totalSeconds));
-  const h = Math.floor(s/3600), m = Math.floor((s%3600)/60);
-  return h>0 ? `${h}h ${m}m` : `${m}m`;
+  const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
+  if(h>0) return `${h}h ${m}m ${sec}s`;
+  if(m>0) return `${m}m ${sec}s`;
+  return `${sec}s`;
 }
 function formatClock(totalSeconds){
   const s = Math.max(0, Math.round(totalSeconds));
@@ -636,6 +714,7 @@ document.getElementById('tabs').addEventListener('click', (e)=>{
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   tab.classList.add('active');
   state.currentExercise = tab.dataset.exercise;
+  gateFailStart = null; showingPositionHint = false; resetPullupGate();
   renderRepBlock();
 });
 
@@ -720,6 +799,8 @@ cameraSelect.addEventListener('change', async ()=>{
 });
 
 let lastPersonSeen = false;
+let gateFailStart = null;
+let showingPositionHint = false;
 function drawFrame(landmarks){
   overlayCtx.clearRect(0,0,overlay.width,overlay.height);
   if(!landmarks) return;
@@ -742,12 +823,26 @@ function detectionLoop(){
       if(!lastPersonSeen){ setStatus('Tracking active', 'ok'); lastPersonSeen = true; }
       const key = state.currentExercise;
       const metricVal = EXERCISES[key].metric(lm);
-      if(debugToggle.checked){
-        debugReadout.classList.add('show');
-        debugReadout.textContent = `${key} metric: ${metricVal==null?'—':metricVal.toFixed(2)} (state watch)`;
-      }
       const completed = counters[key].update(lm, performance.now());
       if(completed) addRep(key);
+      const gateOk = counters[key].lastGateOk;
+      if(debugToggle.checked){
+        debugReadout.classList.add('show');
+        debugReadout.textContent = `${key} metric: ${metricVal==null?'—':metricVal.toFixed(2)} | position: ${gateOk===false?'BLOCKED':'ok'}`;
+      }
+      if(gateOk === false){
+        if(gateFailStart==null) gateFailStart = performance.now();
+        if(!showingPositionHint && performance.now()-gateFailStart > 900 && !statusText.dataset.userError){
+          setStatus(POSITION_HINTS[key] || 'Get in position for this exercise.', 'info');
+          showingPositionHint = true;
+        }
+      } else {
+        gateFailStart = null;
+        if(showingPositionHint){
+          setStatus('Tracking active', 'ok');
+          showingPositionHint = false;
+        }
+      }
     } else if(lastPersonSeen){
       setStatus('No person in frame — step back so your camera can see you', 'info');
       lastPersonSeen = false;
