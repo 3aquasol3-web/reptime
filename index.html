@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="RepTime">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0B0E14">
+<meta name="description" content="Earn screen time with pull-ups, push-ups, and sit-ups, tracked on-device by AI pose detection.">
+<title>RepTime — Earn Screen Time</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap');
+
+:root{
+  --bg:#0B0E14;
+  --bg-elev:#12161F;
+  --bg-elev2:#171C28;
+  --border:#232838;
+  --border-soft:#1B2030;
+  --text:#EDEFF2;
+  --text-dim:#8B93A7;
+  --text-faint:#565F76;
+  --amber:#FFC145;
+  --amber-ink:#241a04;
+  --green:#3ED598;
+  --coral:#FF5D5D;
+  --radius:16px;
+  --radius-sm:10px;
+  --font-display:'Bebas Neue', sans-serif;
+  --font-body:'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono:'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:
+    radial-gradient(1200px 600px at 15% -10%, #131a29 0%, transparent 55%),
+    radial-gradient(900px 500px at 110% 10%, #171522 0%, transparent 50%),
+    var(--bg);
+  color:var(--text);
+  font-family:var(--font-body);
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  min-height:100vh;
+  padding-bottom:64px;
+}
+.wrap{max-width:640px;margin:0 auto;padding:20px 18px 0;}
+a{color:var(--amber);}
+button{font-family:inherit;}
+:focus-visible{outline:2px solid var(--amber);outline-offset:2px;border-radius:6px;}
+
+/* ---------- Header ---------- */
+header.top{display:flex;align-items:baseline;justify-content:space-between;padding:6px 2px 18px;}
+.brand{font-family:var(--font-display);font-size:34px;letter-spacing:1.5px;color:var(--text);display:flex;align-items:center;gap:8px;}
+.brand .dot{width:10px;height:10px;border-radius:50%;background:var(--green);box-shadow:0 0 12px var(--green);}
+.tagline{font-size:12.5px;color:var(--text-dim);margin-top:2px;}
+
+/* ---------- Cards ---------- */
+.card{
+  background:linear-gradient(180deg,var(--bg-elev) 0%, var(--bg-elev2) 100%);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:18px;
+  margin-bottom:16px;
+}
+.card h2{
+  font-family:var(--font-mono);
+  font-size:11px;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  color:var(--text-faint);
+  margin:0 0 14px;
+  font-weight:600;
+}
+
+/* ---------- Camera ---------- */
+.camera-frame{
+  position:relative;
+  width:100%;
+  aspect-ratio:4/3;
+  background:#05070c;
+  border-radius:var(--radius-sm);
+  overflow:hidden;
+  border:1px solid var(--border-soft);
+  transform: scaleX(-1); /* mirror the whole viewport (video + skeleton) together */
+}
+.camera-frame video{width:100%;height:100%;object-fit:cover;display:block;}
+.camera-frame canvas{position:absolute;inset:0;width:100%;height:100%;}
+.camera-frame .placeholder{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  background:#05070c;
+  color:var(--text-faint);font-size:13px;transform:scaleX(-1);
+  flex-direction:column;gap:10px;text-align:center;padding:20px;
+}
+.camera-frame .placeholder svg{opacity:.5;}
+.status-row{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:13px;color:var(--text-dim);min-height:18px;}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--text-faint);flex:none;}
+.status-row.ok .status-dot{background:var(--green);box-shadow:0 0 8px var(--green);}
+.status-row.error{color:var(--coral);}
+.status-row.error .status-dot{background:var(--coral);}
+.status-row.info .status-dot{background:var(--amber);}
+
+.btn{
+  appearance:none;border:none;cursor:pointer;
+  font-weight:700;font-size:14.5px;
+  padding:12px 18px;border-radius:999px;
+  transition:transform .12s ease, opacity .12s ease;
+}
+.btn:active{transform:scale(.97);}
+.btn:disabled{opacity:.5;cursor:default;}
+.btn-primary{background:var(--amber);color:var(--amber-ink);}
+.btn-ghost{background:var(--bg-elev2);color:var(--text);border:1px solid var(--border);}
+.btn-danger{background:transparent;color:var(--coral);border:1px solid #4a2323;}
+.btn-block{width:100%;}
+.btn-row{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;}
+
+/* ---------- Exercise tabs ---------- */
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:16px 0 4px;}
+.tab{
+  background:var(--bg-elev2);border:1px solid var(--border);color:var(--text-dim);
+  border-radius:var(--radius-sm);padding:10px 6px;font-weight:600;font-size:13px;
+  cursor:pointer;text-align:center;
+}
+.tab.active{background:rgba(255,193,69,.12);border-color:var(--amber);color:var(--amber);}
+
+/* ---------- Rep counter ---------- */
+.rep-block{text-align:center;padding:18px 0 4px;}
+.rep-number{
+  font-family:var(--font-display);
+  font-size:clamp(72px,22vw,110px);
+  line-height:.9;
+  color:var(--text);
+  transition:transform .15s ease, color .15s ease;
+}
+.rep-number.pulse{color:var(--green);transform:scale(1.08);}
+.rep-sub{font-size:13px;color:var(--text-dim);margin-top:2px;}
+.debug-readout{
+  font-family:var(--font-mono);font-size:12px;color:var(--text-faint);
+  margin-top:8px;display:none;
+}
+.debug-readout.show{display:block;}
+
+/* ---------- Rate board (signature element) ---------- */
+.rate-board{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.rate-card{
+  background:var(--bg-elev2);border:1px solid var(--border-soft);border-radius:var(--radius-sm);
+  padding:14px 10px;text-align:center;transition:box-shadow .2s ease, border-color .2s ease;
+}
+.rate-card.pulse{border-color:var(--green);box-shadow:0 0 0 1px var(--green), 0 0 18px rgba(62,213,152,.35);}
+.rate-card .ex-name{font-size:11.5px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
+.rate-card .eq{color:var(--text-faint);font-size:11px;margin:4px 0;font-family:var(--font-mono);}
+.rate-input-wrap{display:flex;align-items:baseline;justify-content:center;gap:4px;}
+.rate-card input{
+  width:52px;background:transparent;border:none;border-bottom:1px dashed var(--border);
+  color:var(--amber);font-family:var(--font-mono);font-size:20px;font-weight:700;text-align:center;
+  padding:2px 0;
+}
+.rate-card input:focus{border-bottom-color:var(--amber);}
+.rate-card .unit{font-family:var(--font-mono);font-size:12px;color:var(--text-dim);}
+
+/* ---------- Bank ---------- */
+.bank-total{font-family:var(--font-display);font-size:44px;color:var(--green);line-height:1;}
+.bank-total small{font-family:var(--font-body);font-size:13px;color:var(--text-dim);font-weight:500;}
+.bank-breakdown{margin-top:12px;font-size:13px;color:var(--text-dim);display:flex;flex-direction:column;gap:4px;}
+.bank-breakdown span.n{color:var(--text);font-family:var(--font-mono);}
+
+/* ---------- Session ---------- */
+.session-input-row{display:flex;align-items:center;gap:10px;}
+.session-input-row input[type=number]{
+  flex:1;background:var(--bg-elev2);border:1px solid var(--border);color:var(--text);
+  font-family:var(--font-mono);font-size:16px;padding:10px 12px;border-radius:var(--radius-sm);
+}
+.countdown{
+  font-family:var(--font-mono);font-size:clamp(48px,16vw,72px);text-align:center;
+  color:var(--text);margin:14px 0 4px;letter-spacing:2px;
+}
+.countdown.running{color:var(--coral);}
+.countdown.done{color:var(--green);}
+.session-msg{text-align:center;font-size:13px;color:var(--text-dim);min-height:18px;}
+
+/* ---------- Custom activities ---------- */
+.custom-form{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+.custom-form input{
+  background:var(--bg-elev2);border:1px solid var(--border);color:var(--text);
+  border-radius:var(--radius-sm);padding:9px 11px;font-size:13.5px;font-family:var(--font-body);
+}
+.custom-form input[name=name]{flex:2;min-width:120px;}
+.custom-form input[name=unit]{flex:1;min-width:70px;}
+.custom-form input[name=minutes]{flex:1;min-width:70px;}
+.custom-list{display:flex;flex-direction:column;gap:8px;}
+.custom-item{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  background:var(--bg-elev2);border:1px solid var(--border-soft);border-radius:var(--radius-sm);
+  padding:10px 12px;
+}
+.custom-item .meta{font-size:13.5px;}
+.custom-item .meta .name{font-weight:600;}
+.custom-item .meta .rate{display:block;font-size:11.5px;color:var(--text-faint);font-family:var(--font-mono);margin-top:1px;}
+.custom-item .controls{display:flex;align-items:center;gap:8px;flex:none;}
+.icon-btn{
+  width:30px;height:30px;border-radius:8px;border:1px solid var(--border);background:var(--bg-elev);
+  color:var(--text);cursor:pointer;font-size:16px;font-weight:700;line-height:1;display:flex;align-items:center;justify-content:center;
+}
+.custom-item .count{font-family:var(--font-mono);min-width:20px;text-align:center;font-weight:700;}
+.custom-item .del{border:none;background:transparent;color:var(--text-faint);cursor:pointer;font-size:16px;padding:2px 4px;}
+.empty-hint{color:var(--text-faint);font-size:13px;text-align:center;padding:6px 0;}
+
+/* ---------- Advanced ---------- */
+details.card{padding:0;}
+details.card summary{
+  list-style:none;cursor:pointer;padding:18px;font-family:var(--font-mono);
+  font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--text-faint);font-weight:600;
+  display:flex;align-items:center;justify-content:space-between;
+}
+details.card summary::-webkit-details-marker{display:none;}
+details.card summary::after{content:'+';font-size:16px;color:var(--text-dim);}
+details.card[open] summary::after{content:'–';}
+.adv-body{padding:0 18px 18px;}
+.adv-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid var(--border-soft);}
+.adv-row:first-child{border-top:none;}
+.adv-row label{font-size:13.5px;}
+.adv-row .hint{display:block;font-size:11.5px;color:var(--text-faint);margin-top:2px;}
+.adv-row select{
+  background:var(--bg-elev2);color:var(--text);border:1px solid var(--border);border-radius:8px;
+  padding:7px 9px;font-family:var(--font-body);font-size:13px;
+}
+.switch{position:relative;width:40px;height:22px;flex:none;}
+.switch input{opacity:0;width:100%;height:100%;position:absolute;margin:0;cursor:pointer;}
+.switch .track{position:absolute;inset:0;background:var(--bg-elev2);border:1px solid var(--border);border-radius:999px;transition:.15s;}
+.switch .thumb{position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:var(--text-dim);transition:.15s;}
+.switch input:checked + .track{background:rgba(255,193,69,.25);border-color:var(--amber);}
+.switch input:checked + .track + .thumb{transform:translateX(18px);background:var(--amber);}
+.adv-row-stack{flex-direction:column;align-items:stretch;}
+.adv-row-stack .adv-row-top{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.name-inputs{display:flex;gap:8px;margin-top:10px;}
+.name-inputs input{flex:1;background:var(--bg-elev);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 10px;font-size:13px;font-family:var(--font-body);}
+
+/* ---------- Footer ---------- */
+footer{max-width:640px;margin:8px auto 0;padding:0 18px;color:var(--text-faint);font-size:12px;line-height:1.6;}
+footer strong{color:var(--text-dim);}
+
+@media (max-width:420px){
+  .rate-board{gap:8px;}
+  .rate-card input{width:44px;font-size:18px;}
+}
+@media (prefers-reduced-motion:reduce){
+  .rep-number,.rate-card,.btn{transition:none !important;}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div>
+      <div class="brand"><span class="dot"></span>REPTIME</div>
+      <div class="tagline">Earn your screen time, one rep at a time.</div>
+    </div>
+  </header>
+
+  <!-- Camera + detection -->
+  <section class="card">
+    <h2>Camera &amp; AI Tracking</h2>
+    <div class="camera-frame" id="cameraFrame">
+      <video id="video" autoplay playsinline muted></video>
+      <canvas id="overlay"></canvas>
+      <div class="placeholder" id="placeholder">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+        <span>Camera is off. Turn it on to start tracking reps.</span>
+      </div>
+    </div>
+    <div class="status-row" id="statusRow"><span class="status-dot"></span><span id="statusText">Not started</span></div>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="enableBtn">Turn On Camera &amp; AI</button>
+    </div>
+
+    <div class="tabs" id="tabs">
+      <button class="tab active" data-exercise="pullup">Pull-Up</button>
+      <button class="tab" data-exercise="pushup">Push-Up</button>
+      <button class="tab" data-exercise="situp">Sit-Up</button>
+    </div>
+
+    <div class="rep-block">
+      <div class="rep-number" id="repNumber">0</div>
+      <div class="rep-sub" id="repSub">Pull-ups this session</div>
+      <div class="debug-readout" id="debugReadout">—</div>
+    </div>
+  </section>
+
+  <!-- Exchange rate board -->
+  <section class="card">
+    <h2>Exchange Rate</h2>
+    <div class="rate-board" id="rateBoard">
+      <div class="rate-card" id="rateCard-pullup">
+        <div class="ex-name">Pull-Up</div>
+        <div class="rate-input-wrap"><span class="unit">1 =</span><input type="number" min="0" step="0.5" id="rate-pullup" value="5"><span class="unit">min</span></div>
+      </div>
+      <div class="rate-card" id="rateCard-pushup">
+        <div class="ex-name">Push-Up</div>
+        <div class="rate-input-wrap"><span class="unit">1 =</span><input type="number" min="0" step="0.5" id="rate-pushup" value="1"><span class="unit">min</span></div>
+      </div>
+      <div class="rate-card" id="rateCard-situp">
+        <div class="ex-name">Sit-Up</div>
+        <div class="rate-input-wrap"><span class="unit">1 =</span><input type="number" min="0" step="0.25" id="rate-situp" value="0.5"><span class="unit">min</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Earned bank + session -->
+  <section class="card">
+    <h2>Earned Time</h2>
+    <div class="bank-total"><span id="bankTotal">0m</span> <small>banked</small></div>
+    <div class="bank-breakdown" id="bankBreakdown"></div>
+
+    <div style="height:16px"></div>
+    <h2>Spend It</h2>
+    <div class="session-input-row">
+      <input type="number" min="0" step="0.5" id="sessionInput" placeholder="Minutes">
+      <button class="btn btn-ghost" id="useAllBtn">Use All</button>
+      <button class="btn btn-primary" id="startSessionBtn">Start Session</button>
+    </div>
+    <div class="countdown" id="countdown" style="display:none">00:00</div>
+    <div class="session-msg" id="sessionMsg"></div>
+    <div class="btn-row" id="sessionControls" style="display:none">
+      <button class="btn btn-ghost" id="pauseSessionBtn">Pause</button>
+      <button class="btn btn-danger" id="endSessionBtn">End &amp; Refund Rest</button>
+    </div>
+  </section>
+
+  <!-- Custom activities -->
+  <section class="card">
+    <h2>Your Own Activities</h2>
+    <form class="custom-form" id="customForm">
+      <input type="text" name="name" placeholder="Activity name" required maxlength="30">
+      <input type="text" name="unit" placeholder="Unit (rep)" maxlength="12">
+      <input type="number" name="minutes" placeholder="Min each" step="0.25" min="0" required style="max-width:90px">
+      <button type="submit" class="btn btn-ghost">Add</button>
+    </form>
+    <div class="custom-list" id="customList"></div>
+    <div class="empty-hint" id="customEmptyHint">No custom activities yet — add reading, chores, laps, anything.</div>
+  </section>
+
+  <!-- Advanced settings -->
+  <details class="card">
+    <summary>Advanced Settings</summary>
+    <div class="adv-body">
+      <div class="adv-row">
+        <div><label for="sens-pullup">Pull-up sensitivity</label><span class="hint">Not counting? Try Loose. Over-counting? Try Strict.</span></div>
+        <select id="sens-pullup"><option value="loose">Loose</option><option value="normal" selected>Normal</option><option value="strict">Strict</option></select>
+      </div>
+      <div class="adv-row">
+        <div><label for="sens-pushup">Push-up sensitivity</label></div>
+        <select id="sens-pushup"><option value="loose">Loose</option><option value="normal" selected>Normal</option><option value="strict">Strict</option></select>
+      </div>
+      <div class="adv-row">
+        <div><label for="sens-situp">Sit-up sensitivity</label></div>
+        <select id="sens-situp"><option value="loose">Loose</option><option value="normal" selected>Normal</option><option value="strict">Strict</option></select>
+      </div>
+      <div class="adv-row">
+        <div><label for="cameraSelect">Camera</label></div>
+        <select id="cameraSelect"><option value="">Default</option></select>
+      </div>
+      <div class="adv-row">
+        <label for="debugToggle">Show live tracking numbers</label>
+        <span class="switch"><input type="checkbox" id="debugToggle"><span class="track"></span><span class="thumb"></span></span>
+      </div>
+      <div class="adv-row adv-row-stack">
+        <div class="adv-row-top">
+          <div><label for="shortcutsToggle">Trigger iOS Shortcuts on session start/end</label><span class="hint">Runs a Shortcut you build once — see chat for setup steps.</span></div>
+          <span class="switch"><input type="checkbox" id="shortcutsToggle"><span class="track"></span><span class="thumb"></span></span>
+        </div>
+        <div class="name-inputs">
+          <input type="text" id="unlockShortcutName" value="RepTime Unlock" placeholder="Unlock shortcut name">
+          <input type="text" id="lockShortcutName" value="RepTime Lock" placeholder="Lock shortcut name">
+        </div>
+      </div>
+      <div class="adv-row">
+        <div><label>Reset everything</label><span class="hint">Clears counts and earned time for this session.</span></div>
+        <button class="btn btn-danger" id="resetBtn" type="button">Reset</button>
+      </div>
+    </div>
+  </details>
+
+  <footer>
+    <strong>How this works:</strong> pose tracking runs fully on your device — video is never uploaded anywhere. RepTime can't lock your phone or other apps for you (no app has that power without Apple/Google's special permission); use the countdown above as your own honest timer, or pair it with your phone's built-in Screen Time / App Limits. Counts reset when you close this page — see the chat for how to make them stick.
+  </footer>
+</div>
+
+<script type="module">
+/* The pose-detection library loads dynamically (not as a static top-level import).
+   A static "import ... from" at the top of a module is all-or-nothing: if it fails for
+   ANY reason (offline, blocked CDN, a sandboxed preview with no external network access),
+   the entire script never runs — every button on the page goes dead with zero feedback,
+   which is exactly the silent failure this is designed to avoid. With a dynamic import,
+   only the camera/AI feature is affected, everything else keeps working, and we can show
+   a real error message. */
+let PoseLandmarker, FilesetResolver, DrawingUtils;
+let mediapipeReady = null;
+function loadMediapipeLibrary(){
+  if(!mediapipeReady){
+    mediapipeReady = import("https://esm.sh/@mediapipe/tasks-vision@0.10.0").then(mod => {
+      PoseLandmarker = mod.PoseLandmarker;
+      FilesetResolver = mod.FilesetResolver;
+      DrawingUtils = mod.DrawingUtils;
+    }).catch(err => {
+      mediapipeReady = null; // reset so the next attempt actually retries instead of replaying the same failure
+      throw err;
+    });
+  }
+  return mediapipeReady;
+}
+loadMediapipeLibrary().catch(()=>{}); // kick off in the background so it's likely ready before the button is even tapped
+
+// Surface anything that slips past a local try/catch instead of failing silently.
+window.addEventListener('error', (e) => {
+  console.error('Uncaught error:', e.error || e.message);
+  const el = document.getElementById('statusText');
+  if (el && !el.dataset.userError) el.textContent = 'Something went wrong — check the browser console for details.';
+});
+window.addEventListener('unhandledrejection', (e) => {
+  console.error('Unhandled promise rejection:', e.reason);
+});
+
+/* ============================== Pure logic (unit-tested separately) ============================== */
+function angleDeg(a, b, c) {
+  const abx = a.x - b.x, aby = a.y - b.y;
+  const cbx = c.x - b.x, cby = c.y - b.y;
+  const dot = abx * cbx + aby * cby;
+  const magAB = Math.hypot(abx, aby);
+  const magCB = Math.hypot(cbx, cby);
+  if (magAB === 0 || magCB === 0) return null;
+  let cos = dot / (magAB * magCB);
+  cos = Math.min(1, Math.max(-1, cos));
+  return (Math.acos(cos) * 180) / Math.PI;
+}
+function clamp(v, lo, hi) { return Math.min(hi, Math.max(lo, v)); }
+
+function createRepCounter({ getMetric, enterThreshold, exitThreshold, direction, minRepIntervalMs }) {
+  let state = 'rest';
+  let lastRepTime = -Infinity;
+  let lastMetric = null;
+  return {
+    update(landmarks, tMs) {
+      const m = getMetric(landmarks);
+      lastMetric = m;
+      if (m == null) return false;
+      const contracted = direction === 'below' ? m < enterThreshold : m > enterThreshold;
+      const released = direction === 'below' ? m > exitThreshold : m < exitThreshold;
+      if (state === 'rest' && contracted) {
+        state = 'contracted';
+      } else if (state === 'contracted' && released) {
+        state = 'rest';
+        if (tMs - lastRepTime >= minRepIntervalMs) {
+          lastRepTime = tMs;
+          return true;
+        }
+      }
+      return false;
+    },
+    get lastMetric() { return lastMetric; },
+    reset() { state = 'rest'; lastRepTime = -Infinity; }
+  };
+}
+
+/* ============================== Landmark helpers (BlazePose 33-point topology) ============================== */
+const IDX = { nose:0, lsh:11, rsh:12, lel:13, rel:14, lwr:15, rwr:16, lhip:23, rhip:24, lknee:25, rknee:26 };
+function vis(p, t=0.5){ return !!p && (p.visibility===undefined || p.visibility>t); }
+
+function pushupMetric(lm){
+  const a=[];
+  if(vis(lm[IDX.lsh])&&vis(lm[IDX.lel])&&vis(lm[IDX.lwr])) a.push(angleDeg(lm[IDX.lsh],lm[IDX.lel],lm[IDX.lwr]));
+  if(vis(lm[IDX.rsh])&&vis(lm[IDX.rel])&&vis(lm[IDX.rwr])) a.push(angleDeg(lm[IDX.rsh],lm[IDX.rel],lm[IDX.rwr]));
+  if(!a.length) return null;
+  return a.reduce((x,y)=>x+y,0)/a.length;
+}
+function situpMetric(lm){
+  const a=[];
+  if(vis(lm[IDX.lsh])&&vis(lm[IDX.lhip])&&vis(lm[IDX.lknee])) a.push(angleDeg(lm[IDX.lsh],lm[IDX.lhip],lm[IDX.lknee]));
+  if(vis(lm[IDX.rsh])&&vis(lm[IDX.rhip])&&vis(lm[IDX.rknee])) a.push(angleDeg(lm[IDX.rsh],lm[IDX.rhip],lm[IDX.rknee]));
+  if(!a.length) return null;
+  return a.reduce((x,y)=>x+y,0)/a.length;
+}
+function pullupMetric(lm){
+  if(!vis(lm[IDX.nose])) return null;
+  const wrists=[];
+  if(vis(lm[IDX.lwr])) wrists.push(lm[IDX.lwr]);
+  if(vis(lm[IDX.rwr])) wrists.push(lm[IDX.rwr]);
+  if(!wrists.length) return null;
+  const avgWristY = wrists.reduce((s,w)=>s+w.y,0)/wrists.length;
+  let torso = 0.5;
+  if(vis(lm[IDX.lsh])&&vis(lm[IDX.lhip])) torso = Math.hypot(lm[IDX.lsh].x-lm[IDX.lhip].x, lm[IDX.lsh].y-lm[IDX.lhip].y) || 0.5;
+  const diff = (lm[IDX.nose].y - avgWristY) / torso; // large positive = hanging; shrinks toward top
+  return clamp(1 - diff, 0, 1); // higher = chin closer to hands
+}
+
+/* ============================== Config ============================== */
+const SENSITIVITY_PRESETS = {
+  pullup: { loose:{enter:0.45,exit:0.30,minRepIntervalMs:500}, normal:{enter:0.60,exit:0.25,minRepIntervalMs:700}, strict:{enter:0.75,exit:0.20,minRepIntervalMs:800} },
+  pushup: { loose:{enter:115,exit:140,minRepIntervalMs:400},   normal:{enter:100,exit:150,minRepIntervalMs:500},   strict:{enter:85,exit:160,minRepIntervalMs:600} },
+  situp:  { loose:{enter:105,exit:130,minRepIntervalMs:500},   normal:{enter:90,exit:140,minRepIntervalMs:600},    strict:{enter:75,exit:150,minRepIntervalMs:700} },
+};
+const EXERCISES = {
+  pullup: { label:'Pull-Up', minutesPerRep:5,   sensitivity:'normal', direction:'above', metric:pullupMetric },
+  pushup: { label:'Push-Up', minutesPerRep:1,   sensitivity:'normal', direction:'below', metric:pushupMetric },
+  situp:  { label:'Sit-Up',  minutesPerRep:0.5, sensitivity:'normal', direction:'below', metric:situpMetric  },
+};
+let counters = {};
+function rebuildCounter(key){
+  const ex = EXERCISES[key];
+  const preset = SENSITIVITY_PRESETS[key][ex.sensitivity];
+  counters[key] = createRepCounter({ getMetric: ex.metric, enterThreshold: preset.enter, exitThreshold: preset.exit, direction: ex.direction, minRepIntervalMs: preset.minRepIntervalMs });
+}
+Object.keys(EXERCISES).forEach(rebuildCounter);
+
+const state = {
+  currentExercise: 'pullup',
+  repCounts: { pullup:0, pushup:0, situp:0 },
+  earnedSeconds: 0,
+  cameraOn: false,
+};
+let customActivities = [];
+
+/* ============================== DOM refs ============================== */
+const $ = (id) => document.getElementById(id);
+const video = $('video'), overlay = $('overlay'), placeholder = $('placeholder');
+const overlayCtx = overlay.getContext('2d');
+const enableBtn = $('enableBtn');
+const statusRow = $('statusRow'), statusText = $('statusText');
+const repNumber = $('repNumber'), repSub = $('repSub'), debugReadout = $('debugReadout');
+const bankTotal = $('bankTotal'), bankBreakdown = $('bankBreakdown');
+const sessionInput = $('sessionInput'), countdownEl = $('countdown'), sessionMsg = $('sessionMsg');
+const sessionControls = $('sessionControls');
+const customForm = $('customForm'), customList = $('customList'), customEmptyHint = $('customEmptyHint');
+const debugToggle = $('debugToggle'), resetBtn = $('resetBtn');
+const cameraSelect = $('cameraSelect');
+
+/* ============================== Formatting ============================== */
+function formatBank(totalSeconds){
+  const s = Math.max(0, Math.round(totalSeconds));
+  const h = Math.floor(s/3600), m = Math.floor((s%3600)/60);
+  return h>0 ? `${h}h ${m}m` : `${m}m`;
+}
+function formatClock(totalSeconds){
+  const s = Math.max(0, Math.round(totalSeconds));
+  const m = Math.floor(s/60), sec = s%60;
+  return `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+}
+function pulse(el, cls='pulse'){
+  el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls);
+  setTimeout(()=>el.classList.remove(cls), 420);
+}
+function setStatus(msg, kind){
+  statusText.textContent = msg;
+  statusRow.className = 'status-row' + (kind ? ' '+kind : '');
+  delete statusText.dataset.userError;
+}
+
+/* ============================== Render ============================== */
+function renderRepBlock(){
+  const key = state.currentExercise;
+  repNumber.textContent = state.repCounts[key];
+  repSub.textContent = `${EXERCISES[key].label}s this session`;
+}
+function renderBank(){
+  bankTotal.textContent = formatBank(state.earnedSeconds);
+  const rows = Object.keys(EXERCISES).map(k=>{
+    const secs = state.repCounts[k]*EXERCISES[k].minutesPerRep*60;
+    return `<div>${EXERCISES[k].label} <span class="n">${state.repCounts[k]}×</span> — ${formatBank(secs)}</div>`;
+  });
+  customActivities.forEach(a=>{
+    const secs = a.count*a.minutesPerUnit*60;
+    if(a.count>0) rows.push(`<div>${escapeHtml(a.name)} <span class="n">${a.count}×</span> — ${formatBank(secs)}</div>`);
+  });
+  bankBreakdown.innerHTML = rows.join('');
+  sessionInput.max = (state.earnedSeconds/60).toFixed(2);
+}
+function escapeHtml(s){ return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function renderCustomList(){
+  customEmptyHint.style.display = customActivities.length ? 'none' : 'block';
+  customList.innerHTML = customActivities.map(a => `
+    <div class="custom-item" data-id="${a.id}">
+      <div class="meta"><span class="name">${escapeHtml(a.name)}</span><span class="rate">1 ${escapeHtml(a.unit)} = ${a.minutesPerUnit} min</span></div>
+      <div class="controls">
+        <button class="icon-btn" data-act="minus">−</button>
+        <span class="count">${a.count}</span>
+        <button class="icon-btn" data-act="plus">+</button>
+        <button class="del" data-act="del" title="Delete">✕</button>
+      </div>
+    </div>`).join('');
+}
+customList.addEventListener('click', (e)=>{
+  const btn = e.target.closest('button'); if(!btn) return;
+  const item = e.target.closest('.custom-item'); const id = item.dataset.id;
+  if(btn.dataset.act==='plus') logCustom(id, 1);
+  else if(btn.dataset.act==='minus') logCustom(id, -1);
+  else if(btn.dataset.act==='del'){ customActivities = customActivities.filter(a=>a.id!==id); renderCustomList(); }
+});
+function logCustom(id, delta){
+  const a = customActivities.find(x=>x.id===id); if(!a) return;
+  if(delta<0 && a.count<=0) return;
+  a.count += delta;
+  state.earnedSeconds = Math.max(0, state.earnedSeconds + delta*a.minutesPerUnit*60);
+  renderBank(); renderCustomList();
+  if(delta>0){
+    const el = customList.querySelector(`[data-id="${id}"] .count`);
+    if(el) pulse(el);
+  }
+}
+
+customForm.addEventListener('submit', (e)=>{
+  e.preventDefault();
+  const fd = new FormData(customForm);
+  const name = (fd.get('name')||'').toString().trim();
+  const unit = (fd.get('unit')||'rep').toString().trim() || 'rep';
+  const minutes = parseFloat(fd.get('minutes'));
+  if(!name || isNaN(minutes) || minutes<0) return;
+  customActivities.push({ id:'c'+Date.now()+Math.random().toString(36).slice(2,6), name, unit, minutesPerUnit:minutes, count:0 });
+  customForm.reset();
+  renderCustomList();
+});
+
+/* ============================== Rep scoring ============================== */
+function addRep(key){
+  state.repCounts[key]++;
+  state.earnedSeconds += EXERCISES[key].minutesPerRep*60;
+  if(key === state.currentExercise){ pulse(repNumber); renderRepBlock(); }
+  pulse($('rateCard-'+key));
+  renderBank();
+}
+
+/* ============================== Tabs ============================== */
+document.getElementById('tabs').addEventListener('click', (e)=>{
+  const tab = e.target.closest('.tab'); if(!tab) return;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  tab.classList.add('active');
+  state.currentExercise = tab.dataset.exercise;
+  renderRepBlock();
+});
+
+/* ============================== Rate inputs ============================== */
+Object.keys(EXERCISES).forEach(key=>{
+  const input = $('rate-'+key);
+  input.addEventListener('input', ()=>{
+    const v = parseFloat(input.value);
+    EXERCISES[key].minutesPerRep = isNaN(v) ? 0 : Math.max(0, v);
+    renderBank();
+  });
+});
+
+/* ============================== Camera + AI ============================== */
+let poseLandmarker = null, visionResolver = null, drawer = null, currentStream = null;
+let cameraMode = 'off'; // 'off' | 'starting' | 'on'
+
+async function initModel(){
+  try {
+    await loadMediapipeLibrary();
+  } catch(err){
+    console.error('Pose-detection library failed to load', err);
+    throw new Error('AI_LIBRARY_LOAD_FAILED');
+  }
+  if(!PoseLandmarker || !FilesetResolver) throw new Error('AI_LIBRARY_LOAD_FAILED');
+  visionResolver = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm");
+  const modelAssetPath = "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task";
+  try {
+    poseLandmarker = await PoseLandmarker.createFromOptions(visionResolver, {
+      baseOptions:{ modelAssetPath, delegate:'GPU' }, runningMode:'VIDEO', numPoses:1,
+      minPoseDetectionConfidence:0.5, minPosePresenceConfidence:0.5, minTrackingConfidence:0.5
+    });
+  } catch(err){
+    console.warn('GPU delegate unavailable, falling back to CPU', err);
+    poseLandmarker = await PoseLandmarker.createFromOptions(visionResolver, {
+      baseOptions:{ modelAssetPath, delegate:'CPU' }, runningMode:'VIDEO', numPoses:1
+    });
+  }
+}
+
+async function startCamera(deviceId){
+  const constraints = { video: deviceId ? { deviceId:{exact:deviceId} } : { facingMode:'user', width:{ideal:640}, height:{ideal:480} }, audio:false };
+  const stream = await navigator.mediaDevices.getUserMedia(constraints);
+  if(currentStream) currentStream.getTracks().forEach(t=>t.stop());
+  currentStream = stream;
+  video.srcObject = stream;
+  await video.play();
+}
+
+async function populateCameraSelect(){
+  try {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const cams = devices.filter(d=>d.kind==='videoinput');
+    if(cams.length < 2) return;
+    cameraSelect.innerHTML = '<option value="">Default</option>' + cams.map((c,i)=>`<option value="${c.deviceId}">${c.label || 'Camera '+(i+1)}</option>`).join('');
+  } catch(e){ /* ignore */ }
+}
+cameraSelect.addEventListener('change', async ()=>{
+  if(cameraMode!=='on') return;
+  try { await startCamera(cameraSelect.value || undefined); } catch(e){ setStatus('Could not switch camera.', 'error'); }
+});
+
+let lastPersonSeen = false;
+function drawFrame(landmarks){
+  overlayCtx.clearRect(0,0,overlay.width,overlay.height);
+  if(!landmarks) return;
+  try {
+    if(!drawer) drawer = new DrawingUtils(overlayCtx);
+    drawer.drawConnectors(landmarks, PoseLandmarker.POSE_CONNECTIONS, { color:'rgba(255,193,69,.55)', lineWidth:3 });
+    drawer.drawLandmarks(landmarks, { color:'#3ED598', radius:3.5, fillColor:'#3ED598' });
+  } catch(err){ /* skeleton drawing is cosmetic only; ignore failures */ }
+}
+
+function detectionLoop(){
+  if(cameraMode !== 'on') return;
+  if(video.readyState >= 2 && poseLandmarker){
+    let result;
+    try { result = poseLandmarker.detectForVideo(video, performance.now()); }
+    catch(err){ console.error(err); requestAnimationFrame(detectionLoop); return; }
+    const lm = result && result.landmarks && result.landmarks[0];
+    drawFrame(lm);
+    if(lm){
+      if(!lastPersonSeen){ setStatus('Tracking active', 'ok'); lastPersonSeen = true; }
+      const key = state.currentExercise;
+      const metricVal = EXERCISES[key].metric(lm);
+      if(debugToggle.checked){
+        debugReadout.classList.add('show');
+        debugReadout.textContent = `${key} metric: ${metricVal==null?'—':metricVal.toFixed(2)} (state watch)`;
+      }
+      const completed = counters[key].update(lm, performance.now());
+      if(completed) addRep(key);
+    } else if(lastPersonSeen){
+      setStatus('No person in frame — step back so your camera can see you', 'info');
+      lastPersonSeen = false;
+    }
+  }
+  requestAnimationFrame(detectionLoop);
+}
+
+enableBtn.addEventListener('click', async ()=>{
+  if(cameraMode === 'on'){
+    cameraMode = 'off'; state.cameraOn = false;
+    if(currentStream) currentStream.getTracks().forEach(t=>t.stop());
+    video.srcObject = null;
+    overlayCtx.clearRect(0,0,overlay.width,overlay.height);
+    lastPersonSeen = false;
+    placeholder.style.display = 'flex';
+    enableBtn.textContent = 'Turn On Camera & AI';
+    setStatus('Camera off', null);
+    return;
+  }
+  enableBtn.disabled = true;
+  cameraMode = 'starting';
+  try {
+    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+      throw new Error('NO_CAMERA_API');
+    }
+    setStatus('Loading the AI pose model…', 'info');
+    if(!poseLandmarker) await initModel();
+    setStatus('Starting your camera…', 'info');
+    await startCamera();
+    await new Promise(res=>{
+      video.addEventListener('loadedmetadata', ()=>{
+        overlay.width = video.videoWidth; overlay.height = video.videoHeight;
+        res();
+      }, { once:true });
+    });
+    placeholder.style.display = 'none';
+    cameraMode = 'on'; state.cameraOn = true;
+    setStatus('Tracking active — get in frame', 'ok');
+    enableBtn.textContent = 'Turn Off Camera';
+    populateCameraSelect();
+    requestAnimationFrame(detectionLoop);
+  } catch(err){
+    console.error(err);
+    cameraMode = 'off';
+    let msg = 'Could not start the camera or AI model. Check your connection and try again.';
+    if(err && err.message === 'AI_LIBRARY_LOAD_FAILED'){
+      if(/claude\.ai$/.test(location.hostname)) msg = "You're viewing this inside Claude's own preview, which blocks loading outside scripts. Save this file and open it on its own (locally, or hosted on GitHub Pages/Netlify) — it'll work there.";
+      else msg = "Couldn't load the AI library from the CDN. Check your internet connection, or this page's host may be blocking outside scripts.";
+    }
+    else if(err && err.message === 'NO_CAMERA_API') msg = "This browser/view won't allow camera access here. Open the file directly in Safari or Chrome (not inside another app's preview) — camera access needs a real HTTPS page or a locally opened file.";
+    else if(err && err.name === 'NotAllowedError') msg = "Camera access denied. Allow it in your browser's site settings, then reload.";
+    else if(err && err.name === 'NotFoundError') msg = 'No camera found. Connect one and reload.';
+    setStatus(msg, 'error');
+    statusText.dataset.userError = '1';
+  } finally {
+    enableBtn.disabled = false;
+  }
+});
+
+/* ============================== Sensitivity ============================== */
+['pullup','pushup','situp'].forEach(key=>{
+  $('sens-'+key).addEventListener('change', (e)=>{
+    EXERCISES[key].sensitivity = e.target.value;
+    rebuildCounter(key);
+  });
+});
+debugToggle.addEventListener('change', ()=>{
+  if(!debugToggle.checked) debugReadout.classList.remove('show');
+});
+
+/* ============================== iOS Shortcuts integration (optional) ============================== */
+const shortcutsToggle = $('shortcutsToggle');
+const unlockShortcutName = $('unlockShortcutName');
+const lockShortcutName = $('lockShortcutName');
+function runShortcut(name){
+  if(!shortcutsToggle.checked) return;
+  const trimmed = (name || '').trim();
+  if(!trimmed) return;
+  try { window.location.href = 'shortcuts://run-shortcut?name=' + encodeURIComponent(trimmed); }
+  catch(e){ /* not iOS, or Shortcuts unavailable — safe to ignore */ }
+}
+
+/* ============================== Session (spend earned time) ============================== */
+let sessionInterval = null, sessionRemaining = 0, sessionPaused = false;
+$('useAllBtn').addEventListener('click', ()=>{ sessionInput.value = (state.earnedSeconds/60).toFixed(2); });
+
+$('startSessionBtn').addEventListener('click', ()=>{
+  let minutes = parseFloat(sessionInput.value);
+  const bankMinutes = state.earnedSeconds/60;
+  if(isNaN(minutes) || minutes<=0){ sessionMsg.textContent = 'Enter how many minutes to spend.'; return; }
+  minutes = Math.min(minutes, bankMinutes);
+  if(minutes<=0){ sessionMsg.textContent = 'You have no earned time yet — go do some reps.'; return; }
+  state.earnedSeconds -= minutes*60;
+  renderBank();
+  runShortcut(unlockShortcutName.value);
+  sessionRemaining = Math.round(minutes*60);
+  sessionPaused = false;
+  countdownEl.style.display = 'block';
+  countdownEl.className = 'countdown running';
+  sessionControls.style.display = 'flex';
+  sessionMsg.textContent = 'Session running — enjoy responsibly.';
+  $('startSessionBtn').disabled = true; sessionInput.disabled = true; $('useAllBtn').disabled = true;
+  tickCountdown();
+  clearInterval(sessionInterval);
+  sessionInterval = setInterval(()=>{
+    if(sessionPaused) return;
+    sessionRemaining--;
+    if(sessionRemaining<=0){
+      clearInterval(sessionInterval);
+      countdownEl.textContent = '00:00';
+      countdownEl.className = 'countdown done';
+      sessionMsg.textContent = "Time's up — nice work. Earn more whenever you're ready.";
+      sessionControls.style.display = 'none';
+      $('startSessionBtn').disabled = false; sessionInput.disabled = false; $('useAllBtn').disabled = false;
+      runShortcut(lockShortcutName.value);
+      beep();
+      return;
+    }
+    tickCountdown();
+  }, 1000);
+});
+function tickCountdown(){ countdownEl.textContent = formatClock(sessionRemaining); }
+$('pauseSessionBtn').addEventListener('click', ()=>{
+  sessionPaused = !sessionPaused;
+  $('pauseSessionBtn').textContent = sessionPaused ? 'Resume' : 'Pause';
+  sessionMsg.textContent = sessionPaused ? 'Paused.' : 'Session running — enjoy responsibly.';
+});
+$('endSessionBtn').addEventListener('click', ()=>{
+  clearInterval(sessionInterval);
+  state.earnedSeconds += sessionRemaining; // refund unused time
+  renderBank();
+  runShortcut(lockShortcutName.value);
+  countdownEl.style.display = 'none';
+  sessionControls.style.display = 'none';
+  sessionMsg.textContent = `Ended early — ${formatBank(sessionRemaining)} refunded to your bank.`;
+  $('startSessionBtn').disabled = false; sessionInput.disabled = false; $('useAllBtn').disabled = false;
+  $('pauseSessionBtn').textContent = 'Pause'; sessionPaused = false;
+});
+function beep(){
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    const ctx = new Ctx();
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    g.gain.setValueAtTime(0.16, ctx.currentTime);
+    o.frequency.setValueAtTime(880, ctx.currentTime);
+    o.frequency.setValueAtTime(660, ctx.currentTime+0.15);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+0.6);
+    o.start(); o.stop(ctx.currentTime+0.6);
+  } catch(e){ /* audio unavailable, ignore */ }
+}
+
+/* ============================== Reset ============================== */
+resetBtn.addEventListener('click', ()=>{
+  if(!confirm('Reset all rep counts and earned time? This cannot be undone.')) return;
+  state.repCounts = { pullup:0, pushup:0, situp:0 };
+  state.earnedSeconds = 0;
+  customActivities.forEach(a=>a.count=0);
+  renderRepBlock(); renderBank(); renderCustomList();
+});
+
+/* ============================== Init ============================== */
+renderRepBlock();
+renderBank();
+renderCustomList();
+</script>
+</body>
+</html>
