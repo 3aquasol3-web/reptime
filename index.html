@@ -682,7 +682,28 @@ async function startCamera(deviceId){
   if(currentStream) currentStream.getTracks().forEach(t=>t.stop());
   currentStream = stream;
   video.srcObject = stream;
+  await waitForVideoMetadata(video);
   await video.play();
+  overlay.width = video.videoWidth;
+  overlay.height = video.videoHeight;
+}
+
+/* Race-condition-safe metadata wait: 'loadedmetadata' can fire the instant
+   srcObject is set, often before a listener attached afterward would ever
+   catch it (that {once:true} event never fires twice). Checking readyState
+   first means we never miss an event that already happened. */
+function waitForVideoMetadata(video){
+  if (video.readyState >= 1 && video.videoWidth > 0) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    const onLoaded = () => { cleanup(); resolve(); };
+    const onError = (e) => { cleanup(); reject(e); };
+    function cleanup(){
+      video.removeEventListener('loadedmetadata', onLoaded);
+      video.removeEventListener('error', onError);
+    }
+    video.addEventListener('loadedmetadata', onLoaded, { once:true });
+    video.addEventListener('error', onError, { once:true });
+  });
 }
 
 async function populateCameraSelect(){
@@ -757,12 +778,6 @@ enableBtn.addEventListener('click', async ()=>{
     if(!poseLandmarker) await initModel();
     setStatus('Starting your camera…', 'info');
     await startCamera();
-    await new Promise(res=>{
-      video.addEventListener('loadedmetadata', ()=>{
-        overlay.width = video.videoWidth; overlay.height = video.videoHeight;
-        res();
-      }, { once:true });
-    });
     placeholder.style.display = 'none';
     cameraMode = 'on'; state.cameraOn = true;
     setStatus('Tracking active — get in frame', 'ok');
