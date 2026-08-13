@@ -11,3 +11,4 @@ Converts calisthenics work to screen time
 2. Add local storage so data isn't lost with one refresh
 3. Improve AI detection to require a full up-and-down sequence for pull-ups and pushups to avoid duplicate counts
 4. Planks instead of situps
+5. Allow switching camera
