@@ -7,7 +7,5 @@ Converts calisthenics work to screen time
 
 ## Stuff to change/improve the app
 
-1. Clean up layout so no scrolling needed (move the timer functionalities to the left of the rep counter, size down the rep counter, move everything else to the right of the rep counter)
+1. Add jump rope (calculate when feet leave ground) (every 30 seconds is 3.5 minutes of screen time)
 2. Add local storage so data isn't lost with one refresh
-3. Improve AI detection to require a full up-and-down sequence for pull-ups and pushups to avoid duplicate counts
-4. Planks instead of situps
