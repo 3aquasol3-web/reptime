@@ -32,7 +32,7 @@
   --font-mono:'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
 }
 *{box-sizing:border-box;}
-html,body{margin:0;padding:0;}
+html,body{margin:0;padding:0;height:100%;overscroll-behavior:none;}
 body{
   background:
     radial-gradient(1200px 600px at 15% -10%, #131a29 0%, transparent 55%),
@@ -42,19 +42,44 @@ body{
   font-family:var(--font-body);
   line-height:1.5;
   -webkit-font-smoothing:antialiased;
-  min-height:100vh;
-  padding-bottom:32px;
+  height:100vh;
+  height:100dvh; /* dynamic viewport height - correct for mobile browser chrome that shows/hides */
+  display:flex;
+  flex-direction:column;
+  overflow:hidden; /* the page itself never scrolls - each view manages its own space */
 }
-.wrap{max-width:640px;margin:0 auto;padding:20px 18px 0;}
+.wrap{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  min-height:0; /* required for a flex child to actually shrink instead of overflowing */
+  max-width:640px;
+  width:100%;
+  margin:0 auto;
+  padding:10px 14px 0;
+}
 a{color:var(--amber);}
 button{font-family:inherit;}
 :focus-visible{outline:2px solid var(--amber);outline-offset:2px;border-radius:6px;}
 
-/* ---------- Header ---------- */
-header.top{display:flex;align-items:baseline;justify-content:space-between;padding:4px 2px 12px;}
-.brand{font-family:var(--font-display);font-size:34px;letter-spacing:1.5px;color:var(--text);display:flex;align-items:center;gap:8px;}
-.brand .dot{width:10px;height:10px;border-radius:50%;background:var(--green);box-shadow:0 0 12px var(--green);}
-.tagline{font-size:12.5px;color:var(--text-dim);margin-top:2px;}
+/* ---------- Header + view nav ---------- */
+header.top{flex:none;padding:0 2px 8px;}
+.brand{font-family:var(--font-display);font-size:26px;letter-spacing:1.5px;color:var(--text);display:flex;align-items:center;gap:8px;}
+.brand .dot{width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 12px var(--green);}
+.view-nav{flex:none;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px;}
+.view-tab{
+  background:var(--bg-elev2);border:1px solid var(--border);color:var(--text-dim);
+  border-radius:var(--radius-sm);padding:9px 6px;font-weight:700;font-size:13.5px;
+  cursor:pointer;text-align:center;font-family:var(--font-body);
+}
+.view-tab.active{background:rgba(255,193,69,.12);border-color:var(--amber);color:var(--amber);}
+
+/* ---------- View container: only the ACTIVE view occupies space; it scrolls internally
+   only as a safety net if content is taller than the viewport allows for, never the page ---------- */
+.view-container{flex:1;min-height:0;position:relative;}
+.view{display:none;}
+.view.active{display:flex;flex-direction:column;height:100%;min-height:0;overflow-y:auto;padding-bottom:10px;}
+.cam-card{flex:1;display:flex;flex-direction:column;min-height:0;margin-bottom:0;}
 
 /* ---------- Cards ---------- */
 .card{
@@ -64,6 +89,7 @@ header.top{display:flex;align-items:baseline;justify-content:space-between;paddi
   padding:14px;
   margin-bottom:11px;
 }
+.cam-card h2{ margin-bottom:4px; flex:none; }
 .card h2{
   font-family:var(--font-mono);
   font-size:11px;
@@ -77,8 +103,13 @@ header.top{display:flex;align-items:baseline;justify-content:space-between;paddi
 /* ---------- Camera ---------- */
 .camera-frame{
   position:relative;
-  width:100%;
-  aspect-ratio:3/2;
+  flex:1;
+  min-height:110px;
+  max-height:340px;
+  width:auto;
+  max-width:100%;
+  aspect-ratio:4/3;
+  margin:0 auto;
   background:#05070c;
   border-radius:var(--radius-sm);
   overflow:hidden;
@@ -96,7 +127,7 @@ header.top{display:flex;align-items:baseline;justify-content:space-between;paddi
   flex-direction:column;gap:10px;text-align:center;padding:20px;
 }
 .camera-frame .placeholder svg{opacity:.5;}
-.status-row{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px;color:var(--text-dim);min-height:18px;}
+.status-row{display:flex;align-items:center;gap:8px;margin-top:6px;font-size:12.5px;color:var(--text-dim);min-height:16px;flex:none;}
 .status-dot{width:7px;height:7px;border-radius:50%;background:var(--text-faint);flex:none;}
 .status-row.ok .status-dot{background:var(--green);box-shadow:0 0 8px var(--green);}
 .status-row.error{color:var(--coral);}
@@ -115,10 +146,10 @@ header.top{display:flex;align-items:baseline;justify-content:space-between;paddi
 .btn-ghost{background:var(--bg-elev2);color:var(--text);border:1px solid var(--border);}
 .btn-danger{background:transparent;color:var(--coral);border:1px solid #4a2323;}
 .btn-block{width:100%;}
-.btn-row{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;}
+.btn-row{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;flex:none;}
 
 /* ---------- Exercise tabs ---------- */
-.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0 4px;}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:8px 0 2px;flex:none;}
 .tab{
   background:var(--bg-elev2);border:1px solid var(--border);color:var(--text-dim);
   border-radius:var(--radius-sm);padding:8px 6px;font-weight:600;font-size:13px;
@@ -127,10 +158,10 @@ header.top{display:flex;align-items:baseline;justify-content:space-between;paddi
 .tab.active{background:rgba(255,193,69,.12);border-color:var(--amber);color:var(--amber);}
 
 /* ---------- Rep counter ---------- */
-.rep-block{text-align:center;padding:8px 0 2px;}
+.rep-block{text-align:center;padding:4px 0 0;flex:none;}
 .rep-number{
   font-family:var(--font-display);
-  font-size:clamp(52px,15vw,80px);
+  font-size:clamp(40px,13vw,64px);
   line-height:.9;
   color:var(--text);
   transition:transform .15s ease, color .15s ease;
@@ -165,7 +196,7 @@ header.top{display:flex;align-items:baseline;justify-content:space-between;paddi
 /* ---------- Bank ---------- */
 .bank-total{font-family:var(--font-display);font-size:44px;color:var(--green);line-height:1;}
 .bank-total small{font-family:var(--font-body);font-size:13px;color:var(--text-dim);font-weight:500;}
-.bank-breakdown{margin-top:12px;font-size:13px;color:var(--text-dim);display:flex;flex-direction:column;gap:4px;}
+.bank-breakdown{margin-top:12px;font-size:13px;color:var(--text-dim);display:flex;flex-direction:column;gap:4px;max-height:72px;overflow-y:auto;}
 .bank-breakdown span.n{color:var(--text);font-family:var(--font-mono);}
 
 /* ---------- Session ---------- */
@@ -191,7 +222,7 @@ header.top{display:flex;align-items:baseline;justify-content:space-between;paddi
 .custom-form input[name=name]{flex:2;min-width:120px;}
 .custom-form input[name=unit]{flex:1;min-width:70px;}
 .custom-form input[name=minutes]{flex:1;min-width:70px;}
-.custom-list{display:flex;flex-direction:column;gap:8px;}
+.custom-list{display:flex;flex-direction:column;gap:8px;max-height:180px;overflow-y:auto;}
 .custom-item{
   display:flex;align-items:center;justify-content:space-between;gap:10px;
   background:var(--bg-elev2);border:1px solid var(--border-soft);border-radius:var(--radius-sm);
@@ -256,14 +287,20 @@ footer strong{color:var(--text-dim);}
 <div class="wrap">
 
   <header class="top">
-    <div>
-      <div class="brand"><span class="dot"></span>REPTIME</div>
-      <div class="tagline">Earn your screen time, one rep at a time.</div>
-    </div>
+    <div class="brand"><span class="dot"></span>REPTIME</div>
   </header>
 
+  <nav class="view-nav" id="viewNav">
+    <button class="view-tab active" data-view="track">Track</button>
+    <button class="view-tab" data-view="earn">Earn</button>
+    <button class="view-tab" data-view="more">More</button>
+  </nav>
+
+  <main class="view-container">
+
+  <section class="view active" id="view-track">
   <!-- Camera + detection -->
-  <section class="card">
+  <section class="card cam-card">
     <h2>Camera &amp; AI Tracking</h2>
     <div class="camera-frame" id="cameraFrame">
       <video id="video" autoplay playsinline muted></video>
@@ -291,7 +328,9 @@ footer strong{color:var(--text-dim);}
       <div class="debug-readout" id="debugReadout">—</div>
     </div>
   </section>
+  </section>
 
+  <section class="view" id="view-earn">
   <!-- Exchange rate board -->
   <section class="card">
     <h2>Exchange Rate</h2>
@@ -331,7 +370,9 @@ footer strong{color:var(--text-dim);}
       <button class="btn btn-danger" id="endSessionBtn">End &amp; Refund Rest</button>
     </div>
   </section>
+  </section>
 
+  <section class="view" id="view-more">
   <!-- Custom activities -->
   <section class="card">
     <h2>Your Own Activities</h2>
@@ -387,8 +428,11 @@ footer strong{color:var(--text-dim);}
   </details>
 
   <footer>
-    <strong>How this works:</strong> pose tracking runs fully on your device — video is never uploaded anywhere. RepTime can't lock your phone or other apps for you (no app has that power without Apple/Google's special permission); use the countdown above as your own honest timer, or pair it with your phone's built-in Screen Time / App Limits. Counts reset when you close this page — see the chat for how to make them stick.
+    <strong>How this works:</strong> pose tracking runs fully on your device — video is never uploaded anywhere. RepTime can't lock your phone or other apps for you (no app has that power without Apple/Google's special permission); use the countdown above as your own honest timer, or pair it with your phone's built-in Screen Time / App Limits.
   </footer>
+  </section>
+
+  </main>
 </div>
 
 <script type="module">
@@ -793,6 +837,23 @@ function updateHoldDisplay(result){
   if(result.event==='started') pulse(repNumber);
 }
 
+/* ============================== Views (Track / Earn / More) ============================== */
+let currentView = 'track';
+function showView(name){
+  currentView = name;
+  document.querySelectorAll('.view').forEach(v=>{
+    v.classList.toggle('active', v.id === 'view-'+name);
+  });
+  document.querySelectorAll('.view-tab').forEach(t=>{
+    t.classList.toggle('active', t.dataset.view === name);
+  });
+}
+document.getElementById('viewNav').addEventListener('click', (e)=>{
+  const btn = e.target.closest('.view-tab'); if(!btn) return;
+  showView(btn.dataset.view);
+  saveState();
+});
+
 /* ============================== Tabs ============================== */
 document.getElementById('tabs').addEventListener('click', (e)=>{
   const tab = e.target.closest('.tab'); if(!tab) return;
@@ -1166,6 +1227,7 @@ function buildSaveState(){
     shortcuts: { enabled: shortcutsToggle.checked, unlockName: unlockShortcutName.value, lockName: lockShortcutName.value },
     debug: debugToggle.checked,
     facingMode: currentFacingMode,
+    currentView,
     session: sessionActive ? { remaining: sessionRemaining, paused: sessionPaused, savedAt: Date.now() } : null,
   };
 }
@@ -1216,6 +1278,7 @@ function restoreState(){
     }
     if(typeof saved.debug==='boolean') debugToggle.checked = saved.debug;
     if(saved.facingMode==='user' || saved.facingMode==='environment') currentFacingMode = saved.facingMode;
+    if(['track','earn','more'].includes(saved.currentView)) showView(saved.currentView);
 
     document.querySelectorAll('.tab').forEach(t=>{ t.classList.toggle('active', t.dataset.exercise===state.currentExercise); });
     Object.keys(EXERCISES).forEach(k=>{
@@ -1277,3 +1340,6 @@ window.addEventListener('beforeunload', saveState);
 </script>
 </body>
 </html>
+apps-fileview.texmex_20260805.11_p1
+index.html
+Displaying index.html.
