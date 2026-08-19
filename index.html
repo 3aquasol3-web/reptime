@@ -150,11 +150,13 @@ header.top{flex:none;padding:0 2px 8px;}
 
 /* ---------- Exercise tabs ---------- */
 .tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:8px 0 2px;flex:none;}
+.tabs.tabs-4{grid-template-columns:repeat(4,1fr);gap:6px;}
 .tab{
   background:var(--bg-elev2);border:1px solid var(--border);color:var(--text-dim);
-  border-radius:var(--radius-sm);padding:8px 6px;font-weight:600;font-size:13px;
+  border-radius:var(--radius-sm);padding:8px 4px;font-weight:600;font-size:12.5px;
   cursor:pointer;text-align:center;
 }
+.tabs-4 .tab{font-size:11.5px;padding:8px 2px;}
 .tab.active{background:rgba(255,193,69,.12);border-color:var(--amber);color:var(--amber);}
 
 /* ---------- Rep counter ---------- */
@@ -176,6 +178,8 @@ header.top{flex:none;padding:0 2px 8px;}
 
 /* ---------- Rate board (signature element) ---------- */
 .rate-board{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.rate-board-4{grid-template-columns:repeat(2,1fr);}
+@media (min-width:480px){ .rate-board-4{grid-template-columns:repeat(4,1fr);} }
 .rate-card{
   background:var(--bg-elev2);border:1px solid var(--border-soft);border-radius:var(--radius-sm);
   padding:14px 10px;text-align:center;transition:box-shadow .2s ease, border-color .2s ease;
@@ -200,11 +204,12 @@ header.top{flex:none;padding:0 2px 8px;}
 .bank-breakdown span.n{color:var(--text);font-family:var(--font-mono);}
 
 /* ---------- Session ---------- */
-.session-input-row{display:flex;align-items:center;gap:10px;}
+.session-input-row{display:flex;align-items:center;gap:8px;}
 .session-input-row input[type=number]{
-  flex:1;background:var(--bg-elev2);border:1px solid var(--border);color:var(--text);
-  font-family:var(--font-mono);font-size:16px;padding:10px 12px;border-radius:var(--radius-sm);
+  flex:1;min-width:0;background:var(--bg-elev2);border:1px solid var(--border);color:var(--text);
+  font-family:var(--font-mono);font-size:16px;padding:10px 8px;border-radius:var(--radius-sm);text-align:center;
 }
+.session-input-row .btn{flex:none;}
 .countdown{
   font-family:var(--font-mono);font-size:clamp(48px,16vw,72px);text-align:center;
   color:var(--text);margin:14px 0 4px;letter-spacing:2px;
@@ -316,10 +321,11 @@ footer strong{color:var(--text-dim);}
       <button class="btn btn-ghost" id="flipCameraBtn" type="button" title="Switch between front and back camera">🔄 Front Camera</button>
     </div>
 
-    <div class="tabs" id="tabs">
+    <div class="tabs tabs-4" id="tabs">
       <button class="tab active" data-exercise="pullup">Pull-Up</button>
       <button class="tab" data-exercise="pushup">Push-Up</button>
       <button class="tab" data-exercise="plank">Plank</button>
+      <button class="tab" data-exercise="jumprope">Jump</button>
     </div>
 
     <div class="rep-block">
@@ -331,10 +337,34 @@ footer strong{color:var(--text-dim);}
   </section>
 
   <section class="view" id="view-earn">
+  <!-- Earned bank + session -->
+  <section class="card">
+    <h2>Earned Time</h2>
+    <div class="bank-total"><span id="bankTotal">0m</span> <small>banked</small></div>
+    <div class="bank-breakdown" id="bankBreakdown"></div>
+
+    <div style="height:10px"></div>
+    <h2>Spend It</h2>
+    <div class="session-input-row">
+      <input type="number" min="0" step="1" id="sessionInput" placeholder="Min">
+      <input type="number" min="0" max="59" step="1" id="sessionSecondsInput" placeholder="Sec">
+      <button class="btn btn-ghost" id="useAllBtn">Use All</button>
+    </div>
+    <button class="btn btn-primary btn-block" id="startSessionBtn" style="margin-top:8px">Start Session</button>
+    <div class="countdown" id="countdown" style="display:none">00:00</div>
+    <div class="session-msg" id="sessionMsg"></div>
+    <div class="btn-row" id="sessionControls" style="display:none">
+      <button class="btn btn-ghost" id="pauseSessionBtn">Pause</button>
+      <button class="btn btn-danger" id="endSessionBtn">End &amp; Refund Rest</button>
+    </div>
+  </section>
+  </section>
+
+  <section class="view" id="view-more">
   <!-- Exchange rate board -->
   <section class="card">
     <h2>Exchange Rate</h2>
-    <div class="rate-board" id="rateBoard">
+    <div class="rate-board rate-board-4" id="rateBoard">
       <div class="rate-card" id="rateCard-pullup">
         <div class="ex-name">Pull-Up</div>
         <div class="rate-input-wrap"><span class="unit">1 =</span><input type="number" min="0" step="0.5" id="rate-pullup" value="5"><span class="unit">min</span></div>
@@ -347,32 +377,13 @@ footer strong{color:var(--text-dim);}
         <div class="ex-name">Plank</div>
         <div class="rate-input-wrap"><span class="unit unit-sm">1 min held =</span><input type="number" min="0" step="0.5" id="rate-plank" value="5"><span class="unit">min</span></div>
       </div>
+      <div class="rate-card" id="rateCard-jumprope">
+        <div class="ex-name">Jump Rope</div>
+        <div class="rate-input-wrap"><span class="unit unit-sm">30s jumping =</span><input type="number" min="0" step="0.5" id="rate-jumprope" value="3.5"><span class="unit">min</span></div>
+      </div>
     </div>
   </section>
 
-  <!-- Earned bank + session -->
-  <section class="card">
-    <h2>Earned Time</h2>
-    <div class="bank-total"><span id="bankTotal">0m</span> <small>banked</small></div>
-    <div class="bank-breakdown" id="bankBreakdown"></div>
-
-    <div style="height:8px"></div>
-    <h2>Spend It</h2>
-    <div class="session-input-row">
-      <input type="number" min="0" step="0.5" id="sessionInput" placeholder="Minutes">
-      <button class="btn btn-ghost" id="useAllBtn">Use All</button>
-      <button class="btn btn-primary" id="startSessionBtn">Start Session</button>
-    </div>
-    <div class="countdown" id="countdown" style="display:none">00:00</div>
-    <div class="session-msg" id="sessionMsg"></div>
-    <div class="btn-row" id="sessionControls" style="display:none">
-      <button class="btn btn-ghost" id="pauseSessionBtn">Pause</button>
-      <button class="btn btn-danger" id="endSessionBtn">End &amp; Refund Rest</button>
-    </div>
-  </section>
-  </section>
-
-  <section class="view" id="view-more">
   <!-- Custom activities -->
   <section class="card">
     <h2>Your Own Activities</h2>
@@ -401,6 +412,10 @@ footer strong{color:var(--text-dim);}
       <div class="adv-row">
         <div><label for="sens-plank">Plank sensitivity</label></div>
         <select id="sens-plank"><option value="loose">Loose</option><option value="normal" selected>Normal</option><option value="strict">Strict</option></select>
+      </div>
+      <div class="adv-row">
+        <div><label for="sens-jumprope">Jump rope sensitivity</label></div>
+        <select id="sens-jumprope"><option value="loose">Loose</option><option value="normal" selected>Normal</option><option value="strict">Strict</option></select>
       </div>
       <div class="adv-row">
         <div><label for="cameraSelect">Camera</label></div>
@@ -492,7 +507,7 @@ function createRepCounter({ getMetric, enterThreshold, exitThreshold, direction,
   let lastGateOk = true;
   return {
     update(landmarks, tMs) {
-      const m = getMetric(landmarks);
+      const m = getMetric(landmarks, tMs);
       lastMetric = m;
       if (m == null) return false;
       const gateOk = getGate ? getGate(landmarks, tMs) : true;
@@ -527,7 +542,7 @@ function createRepCounter({ getMetric, enterThreshold, exitThreshold, direction,
 }
 
 /* ============================== Landmark helpers (BlazePose 33-point topology) ============================== */
-const IDX = { nose:0, lsh:11, rsh:12, lel:13, rel:14, lwr:15, rwr:16, lhip:23, rhip:24, lknee:25, rknee:26 };
+const IDX = { nose:0, lsh:11, rsh:12, lel:13, rel:14, lwr:15, rwr:16, lhip:23, rhip:24, lknee:25, rknee:26, lank:27, rank:28 };
 function vis(p, t=0.5){ return !!p && (p.visibility===undefined || p.visibility>t); }
 
 function pushupMetric(lm){
@@ -572,11 +587,19 @@ function tiltFromHorizontalDeg(p1,p2){
   return deg; // 0deg = horizontal (flat on the ground), 90deg = vertical (standing)
 }
 function bodyTiltGate(lm, maxTiltDeg){
+  // Checks BOTH the shoulder->hip segment AND the hip->ankle segment are horizontal.
+  // A torso-only check can be fooled by standing upright but bent forward at the hips
+  // (torso reads as tilted-enough while legs stay vertical) - requiring both segments
+  // closes that loophole and is what actually makes this "on the ground", not just leaning.
   const sh = midOf(lm[IDX.lsh], lm[IDX.rsh]);
   const hip = midOf(lm[IDX.lhip], lm[IDX.rhip]);
-  const tilt = tiltFromHorizontalDeg(sh, hip);
-  if(tilt==null) return null;
-  return tilt <= maxTiltDeg;
+  const ank = midOf(lm[IDX.lank], lm[IDX.rank]);
+  const t1 = tiltFromHorizontalDeg(sh, hip);
+  const t2 = tiltFromHorizontalDeg(hip, ank);
+  if(t1==null && t2==null) return null; // can't tell either segment - don't block
+  if(t1==null) return t2 <= maxTiltDeg;
+  if(t2==null) return t1 <= maxTiltDeg;
+  return t1 <= maxTiltDeg && t2 <= maxTiltDeg;
 }
 let wristHistory = [];
 const WRIST_HISTORY_MS = 1200;
@@ -594,6 +617,48 @@ function pullupGate(lm, tMs, wristStabilityMax, overheadMargin){
   const sh = midOf(lm[IDX.lsh], lm[IDX.rsh]);
   const overhead = sh ? (wrist.y < sh.y - overheadMargin) : true;
   return stable && overhead;
+}
+
+/* ============================== Jump rope ==============================
+   "Feet leave the ground" isn't a fixed threshold - it's relative to wherever THIS
+   person's feet are when standing, which varies with camera distance/angle. So instead
+   of a fixed Y position, this tracks a rolling "ground contact" baseline (the highest -
+   i.e. lowest-on-screen - ankle position seen in the last second) and measures how far
+   above that the ankles rise, normalized by torso length. That feeds a normal rep-style
+   up/down detector to catch individual landings, and a standing-orientation check (the
+   inverse of the plank tilt gate - this one wants NEAR-VERTICAL, not horizontal) makes
+   sure this doesn't fire for someone lying down kicking their legs. */
+let ankleHistory = [];
+const ANKLE_HISTORY_MS = 1000;
+function resetJumpGate(){ ankleHistory = []; lastJumpTime = -Infinity; if(counters.jumprope) counters.jumprope.reset(); }
+function jumpMetric(lm, tMs){
+  const ank = midOf(lm[IDX.lank], lm[IDX.rank]);
+  if(!ank) return null;
+  ankleHistory.push({y:ank.y, t:tMs});
+  while(ankleHistory.length && tMs - ankleHistory[0].t > ANKLE_HISTORY_MS) ankleHistory.shift();
+  let baseline = -Infinity;
+  for(const p of ankleHistory) if(p.y > baseline) baseline = p.y;
+  if(baseline === -Infinity) return null;
+  let torso = 0.5;
+  const sh = midOf(lm[IDX.lsh], lm[IDX.rsh]);
+  const hip = midOf(lm[IDX.lhip], lm[IDX.rhip]);
+  if(sh && hip) torso = Math.hypot(sh.x-hip.x, sh.y-hip.y) || 0.5;
+  return clamp((baseline - ank.y) / torso, 0, 3); // 0 = grounded, grows the higher the feet rise
+}
+function standingGate(lm, minTiltDeg){
+  const sh = midOf(lm[IDX.lsh], lm[IDX.rsh]);
+  const hip = midOf(lm[IDX.lhip], lm[IDX.rhip]);
+  const tilt = tiltFromHorizontalDeg(sh, hip);
+  if(tilt==null) return null;
+  return tilt >= minTiltDeg; // inverse of the plank gate - want vertical, not horizontal
+}
+let lastJumpTime = -Infinity;
+function jumpropeGate(lm, tMs, preset){
+  const landed = counters.jumprope ? counters.jumprope.update(lm, tMs) : false;
+  if(landed) lastJumpTime = tMs;
+  const standing = standingGate(lm, preset.standingMinTiltDeg);
+  if(standing === false) return false; // confidently not standing - block
+  return (tMs - lastJumpTime) <= preset.activityWindowMs;
 }
 
 /* ============================== Hold tracker (plank) ==============================
@@ -638,29 +703,46 @@ function createHoldTracker({ getGate, graceMs=2500, minHoldMs=2000 }){
 
 /* ============================== Config ============================== */
 const SENSITIVITY_PRESETS = {
-  pullup: { loose:{enter:0.45,exit:0.30,minRepIntervalMs:500,minContractedMs:100,wristStabilityMax:0.09,overheadMargin:0.00}, normal:{enter:0.62,exit:0.24,minRepIntervalMs:650,minContractedMs:150,wristStabilityMax:0.06,overheadMargin:0.01}, strict:{enter:0.78,exit:0.18,minRepIntervalMs:800,minContractedMs:220,wristStabilityMax:0.04,overheadMargin:0.02} },
-  pushup: { loose:{enter:110,exit:145,minRepIntervalMs:400,minContractedMs:100,maxTiltDeg:55}, normal:{enter:95,exit:155,minRepIntervalMs:500,minContractedMs:150,maxTiltDeg:45}, strict:{enter:80,exit:165,minRepIntervalMs:600,minContractedMs:220,maxTiltDeg:35} },
-  plank:  { loose:{maxTiltDeg:50,graceMs:3500,minHoldMs:1000}, normal:{maxTiltDeg:40,graceMs:2500,minHoldMs:2000}, strict:{maxTiltDeg:30,graceMs:1500,minHoldMs:3000} },
+  pullup:   { loose:{enter:0.45,exit:0.30,minRepIntervalMs:500,minContractedMs:100,wristStabilityMax:0.09,overheadMargin:0.00}, normal:{enter:0.62,exit:0.24,minRepIntervalMs:650,minContractedMs:150,wristStabilityMax:0.06,overheadMargin:0.01}, strict:{enter:0.78,exit:0.18,minRepIntervalMs:800,minContractedMs:220,wristStabilityMax:0.04,overheadMargin:0.02} },
+  pushup:   { loose:{enter:110,exit:145,minRepIntervalMs:400,minContractedMs:100,maxTiltDeg:55}, normal:{enter:95,exit:155,minRepIntervalMs:500,minContractedMs:150,maxTiltDeg:45}, strict:{enter:80,exit:165,minRepIntervalMs:600,minContractedMs:220,maxTiltDeg:35} },
+  plank:    { loose:{maxTiltDeg:50,graceMs:3500,minHoldMs:1000}, normal:{maxTiltDeg:40,graceMs:2500,minHoldMs:2000}, strict:{maxTiltDeg:30,graceMs:1500,minHoldMs:3000} },
+  jumprope: {
+    loose:  { enter:0.06, exit:0.02, minRepIntervalMs:250, minContractedMs:30, standingMinTiltDeg:50, activityWindowMs:1600, graceMs:3000, minHoldMs:1500 },
+    normal: { enter:0.09, exit:0.03, minRepIntervalMs:300, minContractedMs:40, standingMinTiltDeg:60, activityWindowMs:1300, graceMs:2500, minHoldMs:2000 },
+    strict: { enter:0.13, exit:0.04, minRepIntervalMs:350, minContractedMs:60, standingMinTiltDeg:70, activityWindowMs:1000, graceMs:1800, minHoldMs:2500 },
+  },
 };
 const EXERCISES = {
-  pullup: { type:'reps', label:'Pull-Up', minutesPerRep:5, sensitivity:'normal', direction:'above', metric:pullupMetric },
-  pushup: { type:'reps', label:'Push-Up', minutesPerRep:1, sensitivity:'normal', direction:'below', metric:pushupMetric },
-  plank:  { type:'hold', label:'Plank',   minutesPerMinuteHeld:5, sensitivity:'normal' },
+  pullup:   { type:'reps', label:'Pull-Up',   minutesPerRep:5, sensitivity:'normal', direction:'above', metric:pullupMetric },
+  pushup:   { type:'reps', label:'Push-Up',   minutesPerRep:1, sensitivity:'normal', direction:'below', metric:pushupMetric },
+  plank:    { type:'hold', label:'Plank',     minutesPerMinuteHeld:5,   sensitivity:'normal' },
+  jumprope: { type:'hold', label:'Jump Rope', minutesPerMinuteHeld:7,   sensitivity:'normal' }, // 7x = 3.5min per 30s
 };
 const POSITION_HINTS = {
-  pullup: 'Grip a fixed bar with both hands and hang fully — hands stay put, body does the moving',
-  pushup: 'Get into plank position — hands under shoulders, body flat',
-  plank:  'Get into plank position — straight line from shoulders to ankles',
+  pullup:   'Grip a fixed bar with both hands and hang fully — hands stay put, body does the moving',
+  pushup:   'Get into plank position — hands under shoulders, body flat',
+  plank:    'Get into plank position — straight line from shoulders to ankles',
+  jumprope: 'Stand up and start jumping — both feet need to leave the ground',
 };
 function makeGate(key, preset){
   if(key==='pushup' || key==='plank') return (lm)=> bodyTiltGate(lm, preset.maxTiltDeg);
   if(key==='pullup') return (lm, tMs)=> pullupGate(lm, tMs, preset.wristStabilityMax, preset.overheadMargin);
+  if(key==='jumprope') return (lm, tMs)=> jumpropeGate(lm, tMs, preset);
   return null;
 }
 let counters = {};
 function rebuildCounter(key){
   const ex = EXERCISES[key];
   const preset = SENSITIVITY_PRESETS[key][ex.sensitivity];
+  if(key === 'jumprope'){
+    // Internal jump-landing detector - separate from the reward mechanism, just used to
+    // know "did a jump just happen" so the activity gate below can decide if jumping is
+    // still ongoing right now.
+    counters.jumprope = createRepCounter({
+      getMetric: jumpMetric, enterThreshold: preset.enter, exitThreshold: preset.exit,
+      direction: 'above', minRepIntervalMs: preset.minRepIntervalMs, minContractedMs: preset.minContractedMs
+    });
+  }
   if(ex.type === 'hold'){
     holdTracker = createHoldTracker({ getGate: makeGate(key, preset), graceMs: preset.graceMs, minHoldMs: preset.minHoldMs });
     return;
@@ -677,12 +759,13 @@ Object.keys(EXERCISES).forEach(rebuildCounter);
 const state = {
   currentExercise: 'pullup',
   repCounts: { pullup:0, pushup:0 },
-  plankHeldSeconds: 0,
-  plankBestMs: 0,
+  holdSeconds: { plank:0, jumprope:0 }, // cumulative credited time per continuous-type exercise
+  holdBestMs: { plank:0, jumprope:0 },  // longest single attempt per continuous-type exercise
   earnedSeconds: 0,
   cameraOn: false,
 };
 let customActivities = [];
+
 
 /* ============================== DOM refs ============================== */
 const $ = (id) => document.getElementById(id);
@@ -693,7 +776,7 @@ const flipCameraBtn = $('flipCameraBtn');
 const statusRow = $('statusRow'), statusText = $('statusText');
 const repNumber = $('repNumber'), repSub = $('repSub'), debugReadout = $('debugReadout');
 const bankTotal = $('bankTotal'), bankBreakdown = $('bankBreakdown');
-const sessionInput = $('sessionInput'), countdownEl = $('countdown'), sessionMsg = $('sessionMsg');
+const sessionInput = $('sessionInput'), sessionSecondsInput = $('sessionSecondsInput'), countdownEl = $('countdown'), sessionMsg = $('sessionMsg');
 const sessionControls = $('sessionControls');
 const customForm = $('customForm'), customList = $('customList'), customEmptyHint = $('customEmptyHint');
 const debugToggle = $('debugToggle'), resetBtn = $('resetBtn');
@@ -729,7 +812,9 @@ function renderRepBlock(){
   if(ex.type === 'hold'){
     const secs = Math.floor((holdTracker && holdTracker.isHolding ? holdTracker.heldMs : 0)/1000);
     repNumber.textContent = formatClock(secs);
-    repSub.textContent = state.plankBestMs>0 ? `Current hold — best ${formatClock(Math.floor(state.plankBestMs/1000))} this session` : 'Get into plank position to start holding';
+    const best = state.holdBestMs[key] || 0;
+    const verb = key==='jumprope' ? 'jumping' : 'holding';
+    repSub.textContent = best>0 ? `Current — best ${formatClock(Math.floor(best/1000))} this session` : `Get in position to start ${verb}`;
   } else {
     repNumber.textContent = state.repCounts[key];
     repSub.textContent = `${ex.label}s this session`;
@@ -740,8 +825,10 @@ function renderBank(){
   const rows = Object.keys(EXERCISES).map(k=>{
     const ex = EXERCISES[k];
     if(ex.type === 'hold'){
-      const secs = state.plankHeldSeconds*ex.minutesPerMinuteHeld;
-      return `<div>${ex.label} <span class="n">${formatBank(state.plankHeldSeconds)} held</span> — ${formatBank(secs)}</div>`;
+      const held = state.holdSeconds[k] || 0;
+      const secs = held*ex.minutesPerMinuteHeld;
+      const label = k==='jumprope' ? 'active' : 'held';
+      return `<div>${ex.label} <span class="n">${formatBank(held)} ${label}</span> — ${formatBank(secs)}</div>`;
     }
     const secs = state.repCounts[k]*ex.minutesPerRep*60;
     return `<div>${ex.label} <span class="n">${state.repCounts[k]}×</span> — ${formatBank(secs)}</div>`;
@@ -751,7 +838,6 @@ function renderBank(){
     if(a.count>0) rows.push(`<div>${escapeHtml(a.name)} <span class="n">${a.count}×</span> — ${formatBank(secs)}</div>`);
   });
   bankBreakdown.innerHTML = rows.join('');
-  sessionInput.max = (state.earnedSeconds/60).toFixed(2);
 }
 function escapeHtml(s){ return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
@@ -811,26 +897,26 @@ function addRep(key){
   saveState();
 }
 
-/* ============================== Plank scoring (time-based, not rep-based) ============================== */
-let plankLastPulseMinute = 0;
-function creditPlankTime(creditMs){
-  const ratio = EXERCISES.plank.minutesPerMinuteHeld;
-  state.plankHeldSeconds += creditMs/1000;
+/* ============================== Continuous-activity scoring (plank, jump rope - time-based, not rep-based) ============================== */
+let holdLastPulseMinute = { plank:0, jumprope:0 };
+function creditHoldTime(key, creditMs){
+  const ratio = EXERCISES[key].minutesPerMinuteHeld;
+  state.holdSeconds[key] = (state.holdSeconds[key]||0) + creditMs/1000;
   state.earnedSeconds += (creditMs/1000) * ratio;
-  const wholeMin = Math.floor(state.plankHeldSeconds/60);
-  if(wholeMin > plankLastPulseMinute){
-    plankLastPulseMinute = wholeMin;
-    pulse($('rateCard-plank'));
+  const wholeMin = Math.floor(state.holdSeconds[key]/60);
+  if(wholeMin > holdLastPulseMinute[key]){
+    holdLastPulseMinute[key] = wholeMin;
+    pulse($('rateCard-'+key));
   }
   renderBank();
 }
-function onPlankAttemptEnded(finalMs){
-  if(finalMs > state.plankBestMs) state.plankBestMs = finalMs;
-  if(state.currentExercise === 'plank') renderRepBlock();
+function onHoldAttemptEnded(key, finalMs){
+  if(finalMs > (state.holdBestMs[key]||0)) state.holdBestMs[key] = finalMs;
+  if(state.currentExercise === key) renderRepBlock();
   saveState();
 }
 function updateHoldDisplay(result){
-  if(state.currentExercise !== 'plank') return;
+  if(EXERCISES[state.currentExercise].type !== 'hold') return;
   const secs = Math.floor((result.heldMs||0)/1000);
   const text = formatClock(secs);
   if(repNumber.textContent !== text) repNumber.textContent = text;
@@ -859,13 +945,15 @@ document.getElementById('tabs').addEventListener('click', (e)=>{
   const tab = e.target.closest('.tab'); if(!tab) return;
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   tab.classList.add('active');
-  const leavingPlank = state.currentExercise === 'plank' && tab.dataset.exercise !== 'plank';
+  const prevExercise = state.currentExercise;
+  const wasHoldType = EXERCISES[prevExercise] && EXERCISES[prevExercise].type === 'hold';
+  const leavingHold = wasHoldType && tab.dataset.exercise !== prevExercise;
   state.currentExercise = tab.dataset.exercise;
-  gateFailStart = null; showingPositionHint = false; resetPullupGate();
-  if(leavingPlank && holdTracker && holdTracker.isHolding){
+  gateFailStart = null; showingPositionHint = false; resetPullupGate(); resetJumpGate();
+  if(leavingHold && holdTracker && holdTracker.isHolding){
     const finalMs = holdTracker.heldMs;
     holdTracker.reset();
-    if(finalMs > 0) onPlankAttemptEnded(finalMs);
+    if(finalMs > 0) onHoldAttemptEnded(prevExercise, finalMs);
   }
   renderRepBlock();
   saveState();
@@ -1005,14 +1093,14 @@ function detectionLoop(){
       const ex = EXERCISES[key];
       let gateOk;
       if(ex.type === 'hold'){
-        const result = holdTracker.update(lm, performance.now());
+        const holdResult = holdTracker.update(lm, performance.now());
         gateOk = holdTracker.lastGateOk;
-        if(result.creditMs > 0) creditPlankTime(result.creditMs);
-        updateHoldDisplay(result);
-        if(result.event === 'ended' && result.finalMs > 0) onPlankAttemptEnded(result.finalMs);
+        if(holdResult.creditMs > 0) creditHoldTime(key, holdResult.creditMs);
+        updateHoldDisplay(holdResult);
+        if(holdResult.event === 'ended' && holdResult.finalMs > 0) onHoldAttemptEnded(key, holdResult.finalMs);
         if(debugToggle.checked){
           debugReadout.classList.add('show');
-          debugReadout.textContent = `plank hold: ${(result.heldMs/1000).toFixed(1)}s | position: ${gateOk===false?'BLOCKED':'ok'} | ${result.event}`;
+          debugReadout.textContent = `${key} held: ${(holdResult.heldMs/1000).toFixed(1)}s | position: ${gateOk===false?'BLOCKED':'ok'} | ${holdResult.event}`;
         }
       } else {
         const metricVal = ex.metric(lm);
@@ -1092,7 +1180,7 @@ enableBtn.addEventListener('click', async ()=>{
 });
 
 /* ============================== Sensitivity ============================== */
-['pullup','pushup','plank'].forEach(key=>{
+['pullup','pushup','plank','jumprope'].forEach(key=>{
   $('sens-'+key).addEventListener('change', (e)=>{
     EXERCISES[key].sensitivity = e.target.value;
     rebuildCounter(key);
@@ -1121,14 +1209,18 @@ function runShortcut(name){
 
 /* ============================== Session (spend earned time) ============================== */
 let sessionInterval = null, sessionRemaining = 0, sessionPaused = false, sessionActive = false;
-$('useAllBtn').addEventListener('click', ()=>{ sessionInput.value = (state.earnedSeconds/60).toFixed(2); });
+$('useAllBtn').addEventListener('click', ()=>{
+  const total = Math.max(0, Math.round(Number.isFinite(state.earnedSeconds) ? state.earnedSeconds : 0));
+  sessionInput.value = Math.floor(total/60);
+  sessionSecondsInput.value = total%60;
+});
 
 function beginSessionUI(){
   countdownEl.style.display = 'block';
   countdownEl.className = 'countdown running';
   sessionControls.style.display = 'flex';
   $('pauseSessionBtn').textContent = sessionPaused ? 'Resume' : 'Pause';
-  $('startSessionBtn').disabled = true; sessionInput.disabled = true; $('useAllBtn').disabled = true;
+  $('startSessionBtn').disabled = true; sessionInput.disabled = true; sessionSecondsInput.disabled = true; $('useAllBtn').disabled = true;
   tickCountdown();
   clearInterval(sessionInterval);
   sessionInterval = setInterval(sessionTick, 1000);
@@ -1136,14 +1228,14 @@ function beginSessionUI(){
 function sessionTick(){
   if(sessionPaused) return;
   sessionRemaining--;
-  if(sessionRemaining<=0){
+  if(!Number.isFinite(sessionRemaining) || sessionRemaining<=0){
     clearInterval(sessionInterval);
     sessionActive = false;
     countdownEl.textContent = '00:00';
     countdownEl.className = 'countdown done';
     sessionMsg.textContent = "Time's up — nice work. Earn more whenever you're ready.";
     sessionControls.style.display = 'none';
-    $('startSessionBtn').disabled = false; sessionInput.disabled = false; $('useAllBtn').disabled = false;
+    $('startSessionBtn').disabled = false; sessionInput.disabled = false; sessionSecondsInput.disabled = false; $('useAllBtn').disabled = false;
     runShortcut(lockShortcutName.value);
     beep();
     saveState();
@@ -1154,15 +1246,19 @@ function sessionTick(){
 function tickCountdown(){ countdownEl.textContent = formatClock(sessionRemaining); }
 
 $('startSessionBtn').addEventListener('click', ()=>{
-  let minutes = parseFloat(sessionInput.value);
-  const bankMinutes = state.earnedSeconds/60;
-  if(isNaN(minutes) || minutes<=0){ sessionMsg.textContent = 'Enter how many minutes to spend.'; return; }
-  minutes = Math.min(minutes, bankMinutes);
-  if(minutes<=0){ sessionMsg.textContent = 'You have no earned time yet — go do some reps.'; return; }
-  state.earnedSeconds -= minutes*60;
+  const mRaw = parseFloat(sessionInput.value);
+  const sRaw = parseFloat(sessionSecondsInput.value);
+  const m = Number.isFinite(mRaw) ? Math.max(0, mRaw) : 0;
+  const s = Number.isFinite(sRaw) ? Math.max(0, sRaw) : 0;
+  let wantSeconds = Math.round(m*60 + s);
+  if(wantSeconds <= 0){ sessionMsg.textContent = 'Enter how much time to spend (minutes and/or seconds).'; return; }
+  const bankSeconds = Math.max(0, Math.round(Number.isFinite(state.earnedSeconds) ? state.earnedSeconds : 0));
+  wantSeconds = Math.min(wantSeconds, bankSeconds);
+  if(wantSeconds <= 0){ sessionMsg.textContent = 'You have no earned time yet — go do some reps.'; return; }
+  state.earnedSeconds = Math.max(0, state.earnedSeconds - wantSeconds);
   renderBank();
   runShortcut(unlockShortcutName.value);
-  sessionRemaining = Math.round(minutes*60);
+  sessionRemaining = wantSeconds;
   sessionPaused = false;
   sessionActive = true;
   sessionMsg.textContent = 'Session running — enjoy responsibly.';
@@ -1184,7 +1280,7 @@ $('endSessionBtn').addEventListener('click', ()=>{
   countdownEl.style.display = 'none';
   sessionControls.style.display = 'none';
   sessionMsg.textContent = `Ended early — ${formatBank(sessionRemaining)} refunded to your bank.`;
-  $('startSessionBtn').disabled = false; sessionInput.disabled = false; $('useAllBtn').disabled = false;
+  $('startSessionBtn').disabled = false; sessionInput.disabled = false; sessionSecondsInput.disabled = false; $('useAllBtn').disabled = false;
   $('pauseSessionBtn').textContent = 'Pause'; sessionPaused = false;
   saveState();
 });
@@ -1216,8 +1312,8 @@ function buildSaveState(){
     v: 1,
     repCounts: state.repCounts,
     earnedSeconds: state.earnedSeconds,
-    plankHeldSeconds: state.plankHeldSeconds,
-    plankBestMs: state.plankBestMs,
+    holdSeconds: state.holdSeconds,
+    holdBestMs: state.holdBestMs,
     currentExercise: state.currentExercise,
     customActivities,
     exercises: Object.fromEntries(Object.keys(EXERCISES).map(k => {
@@ -1251,8 +1347,20 @@ function restoreState(){
       }
     }
     if(Number.isFinite(saved.earnedSeconds)) state.earnedSeconds = Math.max(0, saved.earnedSeconds);
-    if(Number.isFinite(saved.plankHeldSeconds)) state.plankHeldSeconds = Math.max(0, saved.plankHeldSeconds);
-    if(Number.isFinite(saved.plankBestMs)) state.plankBestMs = Math.max(0, saved.plankBestMs);
+    if(saved.holdSeconds && typeof saved.holdSeconds==='object'){
+      for(const k of Object.keys(state.holdSeconds)){
+        if(Number.isFinite(saved.holdSeconds[k])) state.holdSeconds[k] = Math.max(0, saved.holdSeconds[k]);
+      }
+    } else if(Number.isFinite(saved.plankHeldSeconds)){ // migrate old single-exercise save format
+      state.holdSeconds.plank = Math.max(0, saved.plankHeldSeconds);
+    }
+    if(saved.holdBestMs && typeof saved.holdBestMs==='object'){
+      for(const k of Object.keys(state.holdBestMs)){
+        if(Number.isFinite(saved.holdBestMs[k])) state.holdBestMs[k] = Math.max(0, saved.holdBestMs[k]);
+      }
+    } else if(Number.isFinite(saved.plankBestMs)){
+      state.holdBestMs.plank = Math.max(0, saved.plankBestMs);
+    }
     if(typeof saved.currentExercise==='string' && EXERCISES[saved.currentExercise]) state.currentExercise = saved.currentExercise;
     if(Array.isArray(saved.customActivities)){
       customActivities = saved.customActivities.filter(a => a && typeof a.name==='string' && Number.isFinite(a.minutesPerUnit)).map(a => ({
@@ -1318,11 +1426,12 @@ function resumeSessionIfAny(sessionSaved){
 resetBtn.addEventListener('click', ()=>{
   if(!confirm('Reset all rep counts and earned time? This cannot be undone.')) return;
   state.repCounts = { pullup:0, pushup:0 };
-  state.plankHeldSeconds = 0;
-  state.plankBestMs = 0;
+  state.holdSeconds = { plank:0, jumprope:0 };
+  state.holdBestMs = { plank:0, jumprope:0 };
   state.earnedSeconds = 0;
-  plankLastPulseMinute = 0;
+  holdLastPulseMinute = { plank:0, jumprope:0 };
   if(holdTracker) holdTracker.reset();
+  resetPullupGate(); resetJumpGate();
   customActivities.forEach(a=>a.count=0);
   renderRepBlock(); renderBank(); renderCustomList();
   saveState();
