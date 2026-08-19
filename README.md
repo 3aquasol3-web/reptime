@@ -7,6 +7,7 @@ Converts calisthenics work to screen time
 
 ## Stuff to change/improve the app
 
+STUFF TO FIX
 1. Beginning to hang on the bar always counts a pull-up. To fix this, make the internal counter start at -1 but keep the display 0 until the internal counter is at 1 to avoid confusion.
 2. Start session button does not work.
 3. Make jump rope more strict with the detection.
@@ -14,3 +15,5 @@ Converts calisthenics work to screen time
 
 
 5. Give claude picture of desired plank position.
+
+STUFF FIXED BUT PENDING CHECKS
