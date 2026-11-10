@@ -12,8 +12,5 @@ STUFF TO FIX
 2. Start session button does not work.
 3. Make jump rope more strict with the detection.
 4. Change the default excahnge rate: 1 pull-up equals 3 minutes, 30 seconds of jump rope equals 4 minutes.
-
-
 5. Give claude picture of desired plank position.
-
-STUFF FIXED BUT PENDING CHECKS
+6. Add a deadhang option. Every second hung is 30 seconds of screentime.
